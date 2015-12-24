@@ -10,6 +10,10 @@
 // Include our own error logger
 // which also has stdio.h included
 #include "ErrorHandler.h"
+
+// Include sprite sheet functions
+#include "Sprite.h"
+
 #include <string.h>
 #include <stddef.h>
 #include <time.h>
