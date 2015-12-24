@@ -12,7 +12,10 @@ static SDL_Renderer* mainRenderer = NULL;
 static int isFullscreen = 0;
 static uint32_t windowWidth = 800, windowHeight = 600;
 static int isGameLooping = 1;
-static clock_t prevClock = 0;
+static uint32_t prevClock = 0;
+
+static BL_Sprite sprArrow;
+static BL_GameObject objNull;
 
 ////////// Functions //////////
 
@@ -26,7 +29,7 @@ int main(int argc, char** argv)
     if(BL_InitGame())
     {
         // Set clock
-        prevClock = clock();
+        prevClock = SDL_GetTicks();
 
         // Call game loop
         BL_MainLoop();
@@ -75,6 +78,16 @@ int BL_InitGame()
         BL_EHLog("InitGame(): Could not initialise window or renderer.\n");
         return 0;
     }
+
+    // Test sprite and object
+    if(!BL_SpriteCreate(mainRenderer, "down_arrow.png", &sprArrow, 1))
+        return 0;
+
+    BL_SpriteSetRect(&sprArrow, 0, 0,0,256,256);
+
+    BL_ObjectInit(&objNull, OBJ_NULL);
+    objNull.sprite = &sprArrow;
+    objNull.vx = objNull.vy = 5;
     return 1;
 }
 
@@ -141,22 +154,21 @@ void BL_MainLoop()
         }
 
         // Calculate elapsed time from last update
-        curClock = clock();
-        secs = (curClock - prevClock) / (double)CLOCKS_PER_SEC;
+        curClock = SDL_GetTicks();
+        secs = (curClock - prevClock) / 1000.0;
         prevClock = curClock;
-
 
         // Update
         BL_Update(secs);
 
         // we now time the rendering
-        curClock = clock();
+        curClock = SDL_GetTicks();
 
         // Draw things
         BL_Render(secs);
 
-        curClock = clock() - curClock;
-        secs = 1000.0 / FPS_CAP - curClock * 1000.0 / CLOCKS_PER_SEC;
+        curClock = SDL_GetTicks() - curClock;
+        secs = 1000.0 / FPS_CAP - curClock;
         if(secs>0)
             SDL_Delay( (int)secs );
     }
@@ -166,7 +178,13 @@ void BL_MainLoop()
 // Update game stuff
 void BL_Update(double secs)
 {
+    // DEBUG: display fps on window title
+    char msg[256] = "";
+    sprintf(msg, "FPS %f", 1/secs);
+    SDL_SetWindowTitle(mainWindow, msg);
 
+    // Test object update
+    BL_ObjectUpdate(&objNull, secs);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -185,6 +203,9 @@ void BL_Render(double secs)
     SDL_SetRenderDrawColor(mainRenderer, 0,0,0, 255);
     SDL_RenderDrawRect(mainRenderer, &rect);
 
+    // Test object render
+    BL_ObjectRender(&objNull,secs,mainRenderer);
+
     SDL_RenderPresent(mainRenderer);
 }
 
@@ -194,6 +215,8 @@ void BL_Render(double secs)
 void BL_ExitGame()
 {
     // Free resources
+    BL_SpriteDestroy(&sprArrow);
+
     if(mainRenderer)
         SDL_DestroyRenderer(mainRenderer);
     if(mainWindow)

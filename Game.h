@@ -13,10 +13,10 @@
 
 // Include sprite sheet functions
 #include "Sprite.h"
+#include "GameObject.h"
 
 #include <string.h>
 #include <stddef.h>
-#include <time.h>
 
 // SDL Includes
 #include <SDL2/SDL.h>
