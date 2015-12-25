@@ -39,6 +39,7 @@ typedef struct __object {
 
     int enabled;            // can this object receive updates?
     int visible;            // will this object be drawn?
+    int destroyed;          // has this object been destroyed?
 
     int useStandardUpdate;  // apply the standard updates to it?
                             // (auto update of position and imageIndex)

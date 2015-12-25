@@ -23,10 +23,11 @@
 #include <SDL2/SDL_image.h>
 
 ////////// Constants //////////
-#define BL_IF_SDL 1
-#define BL_IF_IMG 2
-#define WINDOW_TITLE "Para Para"
-#define FPS_CAP 60
+#define BL_IF_SDL       1
+#define BL_IF_IMG       2
+#define WINDOW_TITLE    "Para Para"
+#define FPS_CAP         60
+
 ////////// Functions //////////
 
 // Initialises the game

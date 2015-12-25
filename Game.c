@@ -18,10 +18,14 @@ static BL_Sprite sprArrow;
 static BL_GameObject objNull;
 
 ////////// Functions //////////
+void ProcessCmdLine(int, char**);
 
 // Main Entry Point
 int main(int argc, char** argv)
 {
+    // Process cmd line
+    ProcessCmdLine(argc, argv);
+
     // Initialise error logger
     BL_EHInit();
 
@@ -46,6 +50,7 @@ int main(int argc, char** argv)
     // Save outputs
     BL_EHFlush();
     BL_EHQuit();
+
     return 0;
 }
 
@@ -80,7 +85,7 @@ int BL_InitGame()
     }
 
     // Test sprite and object
-    if(!BL_SpriteCreate(mainRenderer, "down_arrow.png", &sprArrow, 1))
+    if(!BL_SpriteCreate(mainRenderer, "res/down_arrow.png", &sprArrow, 1))
         return 0;
 
     BL_SpriteSetRect(&sprArrow, 0, 0,0,256,256);
@@ -107,6 +112,16 @@ int BL_InitWindow(int fullscreen)
     {
         BL_EHLog("InitWindow(): Could not create window.\n");
         return 0;
+    }
+
+    if(isFullscreen)
+    {
+        if(SDL_SetWindowFullscreen(mainWindow, SDL_WINDOW_FULLSCREEN)!=0)
+        {
+            isFullscreen=0;
+            BL_EHLog("InitWindow(): Selected fullscreen mode not supported. Reverting to"
+                     "windowed mode.\n");
+        }
     }
 
     mainRenderer = SDL_CreateRenderer(mainWindow, -1, SDL_RENDERER_ACCELERATED);
@@ -147,9 +162,17 @@ void BL_MainLoop()
 
                  ///// Keyup Event /////
                  case SDL_KEYUP:
-                            if(event.key.keysym.sym == SDLK_ESCAPE)
-                                isGameLooping = 0;
+                    switch(event.key.keysym.sym)
+                    {
+                        case SDLK_ESCAPE:   // end game
+                            isGameLooping=0;
                             break;
+                        case SDLK_F2:       // toggle fullscreen
+                            isFullscreen = !isFullscreen;
+                            SDL_SetWindowFullscreen(mainWindow,
+                                isFullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+                            break;
+                    }
             }
         }
 
@@ -227,6 +250,19 @@ void BL_ExitGame()
         IMG_Quit();
     if(initFlags & BL_IF_SDL)
         SDL_Quit();
+}
+
+
+////////////////////////////////////////////////////////////////
+// Process command line options
+void ProcessCmdLine(int argc, char** argv)
+{
+    int i;
+    for(i=1;i<argc;i++)
+    {
+        if(strcmp(argv[i], "--fullscreen")==0)
+            isFullscreen = SDL_WINDOW_FULLSCREEN;
+    }
 }
 
 ////////////////////////////////////////////////////////////////

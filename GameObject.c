@@ -45,6 +45,7 @@ void BL_ObjectDefault(BL_GameObject* obj)
     obj->imageScaleX = obj->imageScaleY = 1.0;
     obj->originX = obj->originY = 0;
     obj->imageAngle = 0;
+    obj->destroyed = 0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -70,7 +71,7 @@ void BL_ObjectInit(BL_GameObject* obj, int type)
 void BL_ObjectUpdate(BL_GameObject* obj, double secs)
 {
     if(!obj) return;
-    if(!(obj->enabled)) return;
+    if(!obj->enabled || obj->destroyed) return;
 
     if(obj->useStandardUpdate)
     {
@@ -99,7 +100,7 @@ void BL_ObjectUpdate(BL_GameObject* obj, double secs)
 void BL_ObjectRender(BL_GameObject* obj, double secs, SDL_Renderer* renderer)
 {
     if(!obj) return;
-    if(!(obj->visible)) return;
+    if(!(obj->visible) || obj->destroyed) return;
 
     tempImgIndex = (int)obj->imageIndex;
     tempSpr = obj->sprite;
@@ -111,6 +112,9 @@ void BL_ObjectRender(BL_GameObject* obj, double secs, SDL_Renderer* renderer)
         default:
             if(tempSpr)
             {
+                    SDL_SetTextureAlphaMod(tempSpr->texture, obj->alpha);
+                    SDL_SetTextureColorMod(tempSpr->texture, obj->tintR, obj->tintG, obj->tintB);
+
                     BL_SpriteRender(renderer, tempSpr, tempImgIndex,
                         (int)(obj->x - obj->originX),
                         (int)(obj->y - obj->originY),
