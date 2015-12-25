@@ -39,10 +39,17 @@ void BL_GOMDestroyObjectById(BL_GOM* mgr, int id);
 // Destroys all objects in the list
 void BL_GOMDestroyAllObjects(BL_GOM* mgr);
 
+// Updates all active objects in the list
+void BL_GOMUpdate(BL_GOM* mgr, double secs);
+
+// Renders all active objects in the list
+void BL_GOMRender(BL_GOM* mgr, SDL_Renderer* renderer, double secs);
+
 // Frees the memory taken up by all objects
 // Including those in reusables
 void BL_GOMFreeAllObjects(BL_GOM* mgr);
 
 // Releases the GOM from memory
 void BL_GOMFree(BL_GOM* mgr);
+
 #endif

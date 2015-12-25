@@ -7,6 +7,9 @@
 static int tempImgIndex;
 static BL_Sprite* tempSpr;
 static SDL_Point tempPoint;
+static BL_Sprite* (*pfnSpriteLoader)(int) = NULL;
+static void (*pfnInitObject)(BL_GameObject*, int) = NULL;
+static void (*pfnObjectUpdate)(BL_GameObject*,double);
 
 static double WrapDouble(double v, double max)
 {
@@ -58,10 +61,17 @@ void BL_ObjectInit(BL_GameObject* obj, int type)
     BL_ObjectDefault(obj);
     obj->type = type;
 
+    if(type != OBJ_NULL && pfnSpriteLoader)
+        obj->sprite = pfnSpriteLoader(type);
+
     // Now populate with the correct settings
     switch(type)
     {
         case OBJ_NULL:      // Null object. Nothing special.
+            break;
+        default:
+            if(pfnInitObject)
+                pfnInitObject(obj, type);
             break;
     }
 }
@@ -91,6 +101,8 @@ void BL_ObjectUpdate(BL_GameObject* obj, double secs)
     switch(obj->type)
     {
         default:
+            if(pfnObjectUpdate)
+                pfnObjectUpdate(obj, secs);
             break;
     }
 }
@@ -124,4 +136,31 @@ void BL_ObjectRender(BL_GameObject* obj, double secs, SDL_Renderer* renderer)
             }
             break;
     }
+}
+
+////////////////////////////////////////////////////////////////
+// Sets the global sprite loader. If this is not null
+// and object type is not OBJ_NULL, then
+// whenever an object is initialised, its sprite is set
+// according to its object type
+void BL_SetObjectSpriteLoader( BL_Sprite* (*pfnLoader)(int) )
+{
+    pfnSpriteLoader = pfnLoader;
+}
+
+////////////////////////////////////////////////////////////////
+// Sets the global object updater. Non-null objects are
+// passed to this
+void BL_SetObjectUpdater( void (*pfnUpdater)(BL_GameObject*,double) )
+{
+    pfnObjectUpdate = pfnUpdater;
+}
+
+////////////////////////////////////////////////////////////////
+// Sets the global object initialiser. If this is not null,
+// and object type is not OBJ_NULL, then the pointer to the
+// object is passed to this function
+void BL_SetObjectInitialiser( void (*pfnInitter)(BL_GameObject*, int))
+{
+    pfnInitObject = pfnInitter;
 }

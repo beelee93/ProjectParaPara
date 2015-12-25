@@ -1,6 +1,6 @@
 //////////////////////////////////////////
 // Game.c
-// Implementation for the para para game
+// Implementation for the game foundations
 //////////////////////////////////////////
 
 #include "Game.h"
@@ -12,16 +12,20 @@ static SDL_Renderer* mainRenderer = NULL;
 static int isFullscreen = 0;
 static uint32_t windowWidth = 800, windowHeight = 600;
 static int isGameLooping = 1;
+static uint8_t clearColor[3] = {0,0,0};
 static uint32_t prevClock = 0;
 
-static BL_Sprite sprArrow;
-static BL_GameObject objNull;
+static void (*pfnProcessEvent)(SDL_Event*,double) = NULL;
+static void (*pfnUpdateFunc)(int,double) = NULL;
+
+static BL_GOM objManager;
 
 ////////// Functions //////////
 void ProcessCmdLine(int, char**);
 
-// Main Entry Point
-int main(int argc, char** argv)
+////////////////////////////////////////////////////////////////
+// Initialises the game
+int BL_InitGame(int argc, char** argv)
 {
     // Process cmd line
     ProcessCmdLine(argc, argv);
@@ -29,40 +33,11 @@ int main(int argc, char** argv)
     // Initialise error logger
     BL_EHInit();
 
-    // Initialise the game
-    if(BL_InitGame())
-    {
-        // Set clock
-        prevClock = SDL_GetTicks();
-
-        // Call game loop
-        BL_MainLoop();
-    }
-    else
-    {
-        BL_EHLog("main(): Could not initialise game. Terminating.\n");
-    }
-
-
-    // End game, but first, we clean up
-    BL_ExitGame();
-
-    // Save outputs
-    BL_EHFlush();
-    BL_EHQuit();
-
-    return 0;
-}
-
-////////////////////////////////////////////////////////////////
-// Initialises the game
-int BL_InitGame()
-{
     // Initialise SDL
     if(SDL_Init(SDL_INIT_EVERYTHING)!=0)
     {
         BL_EHLog("InitGame(): Could not initialise SDL.\n");
-        return 0;
+        goto err;
     }
 
     // Set flag
@@ -72,7 +47,7 @@ int BL_InitGame()
     if((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == 0)
     {
         BL_EHLog("InitGame(): Could not initialise IMG.\n");
-        return 0;
+        goto err;
     }
 
     // Set flag
@@ -81,19 +56,17 @@ int BL_InitGame()
     if(!BL_InitWindow(isFullscreen))
     {
         BL_EHLog("InitGame(): Could not initialise window or renderer.\n");
-        return 0;
+        goto err;
     }
 
-    // Test sprite and object
-    if(!BL_SpriteCreate(mainRenderer, "res/down_arrow.png", &sprArrow, 1))
-        return 0;
+    // Set clock
+    prevClock = SDL_GetTicks();
 
-    BL_SpriteSetRect(&sprArrow, 0, 0,0,256,256);
-
-    BL_ObjectInit(&objNull, OBJ_NULL);
-    objNull.sprite = &sprArrow;
-    objNull.vx = objNull.vy = 5;
     return 1;
+
+    err:
+        BL_EHLog("RunGame(): Could not initialise game.\n");
+        return 0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -131,6 +104,9 @@ int BL_InitWindow(int fullscreen)
         return 0;
     }
 
+    // initialise game object manager
+    BL_GOMInit(&objManager);
+
     return 1;
 }
 
@@ -160,19 +136,10 @@ void BL_MainLoop()
                     }
                     break;
 
-                 ///// Keyup Event /////
-                 case SDL_KEYUP:
-                    switch(event.key.keysym.sym)
-                    {
-                        case SDLK_ESCAPE:   // end game
-                            isGameLooping=0;
-                            break;
-                        case SDLK_F2:       // toggle fullscreen
-                            isFullscreen = !isFullscreen;
-                            SDL_SetWindowFullscreen(mainWindow,
-                                isFullscreen ? SDL_WINDOW_FULLSCREEN : 0);
-                            break;
-                    }
+                default:
+                    if(pfnProcessEvent)
+                        pfnProcessEvent(&event, secs);
+                    break;
             }
         }
 
@@ -203,31 +170,25 @@ void BL_Update(double secs)
 {
     // DEBUG: display fps on window title
     char msg[256] = "";
-    sprintf(msg, "FPS %f", 1/secs);
+    sprintf(msg, "FPS %f GOM_COUNT %d GOM_CAP %d", 1/secs,objManager.objCount, objManager.capacity);
     SDL_SetWindowTitle(mainWindow, msg);
 
-    // Test object update
-    BL_ObjectUpdate(&objNull, secs);
+    if(pfnUpdateFunc) pfnUpdateFunc(1, secs);
+    // update GOM
+    BL_GOMUpdate(&objManager, secs);
+
+    if(pfnUpdateFunc) pfnUpdateFunc(0, secs);
 }
 
 ////////////////////////////////////////////////////////////////
 // Render things on screen
 void BL_Render(double secs)
 {
-    SDL_Rect rect;
-    rect.x = 10;
-    rect.y = 10;
-    rect.w = windowWidth-20;
-    rect.h = windowHeight-20;
-
-    SDL_SetRenderDrawColor(mainRenderer, 0x64, 0x95, 0xED, 255);
+    SDL_SetRenderDrawColor(mainRenderer, clearColor[0], clearColor[1], clearColor[2], 255);
     SDL_RenderClear(mainRenderer);
 
-    SDL_SetRenderDrawColor(mainRenderer, 0,0,0, 255);
-    SDL_RenderDrawRect(mainRenderer, &rect);
-
-    // Test object render
-    BL_ObjectRender(&objNull,secs,mainRenderer);
+    // Render GOM
+    BL_GOMRender(&objManager, mainRenderer, secs);
 
     SDL_RenderPresent(mainRenderer);
 }
@@ -237,8 +198,8 @@ void BL_Render(double secs)
 // Clean up
 void BL_ExitGame()
 {
-    // Free resources
-    BL_SpriteDestroy(&sprArrow);
+    // Free object manager
+    BL_GOMFree(&objManager);
 
     if(mainRenderer)
         SDL_DestroyRenderer(mainRenderer);
@@ -250,6 +211,10 @@ void BL_ExitGame()
         IMG_Quit();
     if(initFlags & BL_IF_SDL)
         SDL_Quit();
+
+    // Save outputs
+    BL_EHFlush();
+    BL_EHQuit();
 }
 
 
@@ -266,15 +231,62 @@ void ProcessCmdLine(int argc, char** argv)
 }
 
 ////////////////////////////////////////////////////////////////
-// Access main window
+// Signals to the main game loop to stop
+void BL_SignalExit()
+{
+    isGameLooping = 0;
+}
+
+////////////////////////////////////////////////////////////////
+// Sets whether to display on fullscreen
+// -1 for toggle
+void BL_SetFullscreen(int fscr)
+{
+    if(fscr<0)
+        isFullscreen = !isFullscreen;
+    else
+        isFullscreen = fscr;
+    SDL_SetWindowFullscreen(mainWindow,
+        isFullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+}
+
+
+
+////////////////////////////////////////////////////////////////
+SDL_Renderer* BL_GetMainRenderer()
+{
+    return mainRenderer;
+}
+
 SDL_Window* BL_GetMainWindow()
 {
     return mainWindow;
 }
 
-////////////////////////////////////////////////////////////////
-// Acces main renderer
-SDL_Renderer* BL_GetMainRenderer()
+BL_GOM* BL_GetGOM()
 {
-    return mainRenderer;
+    return &objManager;
+}
+
+////////////////////////////////////////////////////////////////
+// Sets the event listener for the game
+// -void EventProc(SDL_Event* event, double seconds)
+void BL_SetEventProcessor(void (*pfnEvtProc)(SDL_Event*,double))
+{
+    pfnProcessEvent = pfnEvtProc;
+}
+
+////////////////////////////////////////////////////////////////
+// The function will be called twice every update cycle
+void BL_SetUpdateFunction(void (*pfnUpdater)(int,double))
+{
+    pfnUpdateFunc=pfnUpdater;
+}
+////////////////////////////////////////////////////////////////
+// Sets the clear color
+void BL_SetClearColor(uint8_t r,uint8_t g,uint8_t b)
+{
+    clearColor[0]=r;
+    clearColor[1]=g;
+    clearColor[2]=b;
 }

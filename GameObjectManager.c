@@ -152,6 +152,43 @@ void BL_GOMFreeAllObjects(BL_GOM* mgr)
 }
 
 ////////////////////////////////////////////////////////////////
+// Updates all active objects in the list
+void BL_GOMUpdate(BL_GOM* mgr, double secs)
+{
+    int i;
+    if (!mgr || mgr->freed) return;
+
+    for (i=0;i<mgr->capacity;i++)
+    {
+        // due to how the array is filled
+        // once we reach a NULL ptr, that's
+        // all we need to update
+        if(mgr->objects[i]==NULL) return;
+        if(mgr->objects[i]->destroyed) continue;
+        BL_ObjectUpdate(mgr->objects[i], secs);
+    }
+}
+
+////////////////////////////////////////////////////////////////
+// Renders all active objects in the list
+void BL_GOMRender(BL_GOM* mgr, SDL_Renderer* renderer, double secs)
+{
+    int i;
+    if (!mgr || mgr->freed) return;
+
+    for (i=0;i<mgr->capacity;i++)
+    {
+        // due to how the array is filled
+        // once we reach a NULL ptr, that's
+        // all we need to render
+        if(mgr->objects[i]==NULL) return;
+        if(mgr->objects[i]->destroyed) continue;
+        BL_ObjectRender(mgr->objects[i], secs, renderer);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////
 // Releases the GOM from memory
 void BL_GOMFree(BL_GOM* mgr)
 {
@@ -193,3 +230,4 @@ static void ExpandCapacity(BL_GOM* mgr)
     // 6. set the new capacity
     mgr->capacity = newCap;
 }
+

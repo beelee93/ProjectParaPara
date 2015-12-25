@@ -7,13 +7,11 @@
 #ifndef GAME_H_INCLUDED
 #define GAME_H_INCLUDED
 
-// Include our own error logger
-// which also has stdio.h included
 #include "ErrorHandler.h"
-
-// Include sprite sheet functions
 #include "Sprite.h"
 #include "GameObject.h"
+#include "GameObjectManager.h"
+#include "SpriteLoader.h"
 
 #include <string.h>
 #include <stddef.h>
@@ -31,7 +29,7 @@
 ////////// Functions //////////
 
 // Initialises the game
-int BL_InitGame();
+int BL_InitGame(int, char**);
 
 // Initialises the window and its renderer
 int BL_InitWindow(int fullscreen);
@@ -48,10 +46,27 @@ void BL_Update(double secs);
 // Clean up
 void BL_ExitGame();
 
-// Access the main window
-SDL_Window* BL_GetMainWindow();
+// Sets the event listener for the game
+// -void EventProc(SDL_Event* event, double seconds)
+void BL_SetEventProcessor(void (*pfnEvtProc)(SDL_Event*,double));
 
-// Access the main renderer
+// The function will be called twice every update cycle
+// -Create Update(int pre,double secs)
+// -Pre-GOM-update -> pre=1
+// -Post-GOM-Update -> pre=0
+void BL_SetUpdateFunction(void (*pfnUpdater)(int,double));
+
+// Signals to the main game loop to stop
+void BL_SignalExit();
+
+// Sets whether to display on fullscreen
+// -1 for toggle
+void BL_SetFullscreen(int fscr);
+
+
+
+BL_GOM* BL_GetGOM();
 SDL_Renderer* BL_GetMainRenderer();
+SDL_Window* BL_GetMainWindow();
 
 #endif // GAME_H_INCLUDED

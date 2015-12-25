@@ -7,6 +7,7 @@
 #define GAMEOBJECT_H_INCLUDED
 
 #include "Sprite.h"
+#include "Resource.h"
 
 typedef struct __object {
     int type;               // a unique type id
@@ -44,11 +45,10 @@ typedef struct __object {
     int useStandardUpdate;  // apply the standard updates to it?
                             // (auto update of position and imageIndex)
 
+    void* data;             // any extra data to be stored?
 } BL_GameObject;
 
-//////// Object Types /////////
-// An object that does nothing
-#define OBJ_NULL 0
+#define OBJ_NULL -1
 
 //////// Functions ////////
 // Sets specified object to default settings (null object)
@@ -63,5 +63,24 @@ void BL_ObjectUpdate(BL_GameObject* obj, double secs);
 
 // Renders the object
 void BL_ObjectRender(BL_GameObject* obj, double secs, SDL_Renderer* renderer);
+
+// Sets the global sprite loader. If this is not null
+// and object type is not OBJ_NULL, then
+// whenever an object is initialised, its sprite is set
+// according to its object type
+// -Create a function BL_Sprite* <funcname>(int objectType)
+void BL_SetObjectSpriteLoader( BL_Sprite* (*pfnLoader)(int) );
+
+// Sets the global object initialiser. If this is not null,
+// and object type is not OBJ_NULL, then the pointer to the
+// object is passed to this function
+// -Create a function void <funcname>(BL_GameObject* obj, int objectType)
+void BL_SetObjectInitialiser( void (*pfnInitter)(BL_GameObject*, int));
+
+// Sets the global object updater. Non-null objects are
+// passed to this
+// -Create void <funcname>(BL_GameObject *obj, double seconds)
+void BL_SetObjectUpdater( void (*pfnUpdater)(BL_GameObject*,double) );
+
 
 #endif // GAMEOBJECT_H_INCLUDED
