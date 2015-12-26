@@ -19,10 +19,13 @@
 // SDL Includes
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL_ttf.h>
 
 ////////// Constants //////////
 #define BL_IF_SDL       1
 #define BL_IF_IMG       2
+#define BL_IF_TTF       4
+
 #define WINDOW_TITLE    "Para Para"
 #define FPS_CAP         60
 

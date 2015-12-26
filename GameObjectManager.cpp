@@ -72,6 +72,7 @@ BL_GameObject* BL_GOM::CreateObject(int type)
                 obj = OnCreateObject(type);
 
             obj->OnInit(i, type);
+            obj->SetAttachedGOM(this);
 
             // put this object into manager
             objects[i] = obj;

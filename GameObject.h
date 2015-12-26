@@ -26,7 +26,7 @@ public:
     double vx;              // velocities
     double vy;
 
-    uint8_t alpha;           // image alpha
+    double alpha;           // image alpha
 
     uint8_t tintR;         // tint colors
     uint8_t tintG;
@@ -57,9 +57,12 @@ public:
 
     void SignalDestroy();
     int IsBeingDestroyed();
+    void* GetAttachedGOM();
+    void SetAttachedGOM(void* gom);
 
 protected:
     int destroyFlag;        // signal for GOM to destroy this object
+    void* attachedGOM;
 };
 
 #endif // GAMEOBJECT_H_INCLUDED

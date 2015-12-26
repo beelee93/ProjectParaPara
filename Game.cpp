@@ -40,6 +40,16 @@ BL_Game::BL_Game(int argc, char** argv)
     // Set flag
     initFlags |= BL_IF_IMG;
 
+     // Initialise TTF
+    if(TTF_Init() != 0)
+    {
+        BL_EHLog("InitGame(): Could not initialise TTF.\n");
+        goto err;
+    }
+
+    // Set flag
+    initFlags |= BL_IF_TTF;
+
     if(!InitWindow(isFullscreen))
     {
         BL_EHLog("InitGame(): Could not initialise window or renderer.\n");
@@ -66,6 +76,8 @@ BL_Game::~BL_Game()
         SDL_DestroyWindow(mainWindow);
 
     // Free libraries
+    if(initFlags & BL_IF_TTF)
+        TTF_Quit();
     if(initFlags & BL_IF_IMG)
         IMG_Quit();
     if(initFlags & BL_IF_SDL)
@@ -115,12 +127,6 @@ void BL_Game::MainLoop()
 // Called on every update cycle
 void BL_Game::OnUpdate(double secs)
 {
-    // DEBUG: display fps on window title
-    char msg[256] = "";
-    sprintf(msg, "FPS %f GOM_COUNT %d GOM_CAP %d", 1/secs,objManager->GetObjectCount(),
-            objManager->GetCapacity());
-    SDL_SetWindowTitle(mainWindow, msg);
-
     if(objManager) objManager->Update(secs);
 }
 

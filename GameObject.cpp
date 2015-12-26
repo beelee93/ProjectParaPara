@@ -38,7 +38,7 @@ void BL_GameObject::OnInit(int id, int type)
     this->id = id;
     enabled = 1;
     visible = 1;
-    alpha = 255;
+    alpha = 1;
     tintB = tintG = tintR = 255;
     imageIndex = 0;
     imageSpeed = 0;
@@ -63,7 +63,7 @@ void BL_GameObject::OnRender(double secs)
     if(sprite)
     {
             tex=sprite->GetTexture();
-            SDL_SetTextureAlphaMod(tex, alpha);
+            SDL_SetTextureAlphaMod(tex, (int)(alpha*255.0));
             SDL_SetTextureColorMod(tex, tintR, tintG, tintB);
 
             sprite->Render(tempImgIndex,
@@ -99,4 +99,14 @@ void BL_GameObject::SignalDestroy()
 int BL_GameObject::IsBeingDestroyed()
 {
     return destroyFlag;
+}
+
+void* BL_GameObject::GetAttachedGOM()
+{
+    return attachedGOM;
+}
+
+void BL_GameObject::SetAttachedGOM(void* gom)
+{
+    attachedGOM = gom;
 }

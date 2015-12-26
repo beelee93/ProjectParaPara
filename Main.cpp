@@ -1,15 +1,13 @@
 #include "Game.h"
 #include "Globals.h"
 
-// Test sprite list
+// Global sprite list
 static BL_SpriteList* sprites;
-
-// timer
-static double countdown = 2.0;
 
 // main game
 static BL_Game* game = NULL;
 
+// Global Game object manager
 static BL_GOM* gom = NULL;
 
 int main(int argc, char** argv)

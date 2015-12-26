@@ -24,9 +24,10 @@ class GameParaPara : public BL_Game
 {
 public:
     GameParaPara(int, char**);
-
+    ~GameParaPara();
     void OnUpdate(double secs);
     void OnEvent(SDL_Event* event, double secs);
+    void OnRender(SDL_Renderer* renderer, double secs);
 };
 
 /////// Inherited GOM ////////
@@ -44,6 +45,9 @@ public:
     GODefaultArrow();
     void OnInit(int id, int type);
     void OnUpdate(double secs);
+
+private:
+    int disappearing;
 };
 
 class GODownArrow : public BL_GameObject
