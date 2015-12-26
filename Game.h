@@ -26,47 +26,49 @@
 #define WINDOW_TITLE    "Para Para"
 #define FPS_CAP         60
 
-////////// Functions //////////
+enum BL_SET_FULLSCREEN {
+    SF_WINDOWED_MODE,
+    SF_FULLSCREEN_MODE,
+    SF_TOGGLE
+};
 
-// Initialises the game
-int BL_InitGame(int, char**);
+class BL_Game
+{
+public:
+    BL_Game(int argc, char** argv);
+    ~BL_Game();
 
-// Initialises the window and its renderer
-int BL_InitWindow(int fullscreen);
+    void MainLoop();
 
-// Game loop
-void BL_MainLoop();
+    virtual void OnUpdate(double secs);
+    virtual void OnRender(SDL_Renderer* renderer,double secs);
+    virtual void OnEvent(SDL_Event* event, double secs);
 
-// Rendering function
-void BL_Render(double secs);
+    void SignalExit();
+    void SetFullscreen(BL_SET_FULLSCREEN fscr);
+    SDL_Renderer* GetMainRenderer();
+    SDL_Window* GetMainWindow();
+    BL_GOM* GetObjectManager();
+    int GetInitialised();
+    void SetObjectManager(BL_GOM* gom);
 
-// Updating function
-void BL_Update(double secs);
+protected:
+    SDL_Renderer* mainRenderer;
+    SDL_Window* mainWindow;
+    BL_GOM* objManager;
 
-// Clean up
-void BL_ExitGame();
-
-// Sets the event listener for the game
-// -void EventProc(SDL_Event* event, double seconds)
-void BL_SetEventProcessor(void (*pfnEvtProc)(SDL_Event*,double));
-
-// The function will be called twice every update cycle
-// -Create Update(int pre,double secs)
-// -Pre-GOM-update -> pre=1
-// -Post-GOM-Update -> pre=0
-void BL_SetUpdateFunction(void (*pfnUpdater)(int,double));
-
-// Signals to the main game loop to stop
-void BL_SignalExit();
-
-// Sets whether to display on fullscreen
-// -1 for toggle
-void BL_SetFullscreen(int fscr);
-
+    int isFullscreen;
+    int windowWidth;
+    int windowHeight;
+    int InitWindow(int fullscreen);
 
 
-BL_GOM* BL_GetGOM();
-SDL_Renderer* BL_GetMainRenderer();
-SDL_Window* BL_GetMainWindow();
+private:
+    void ProcessCmdLine(int argc, char** argv);
+    int initialised;
+    int initFlags;
+    int isGameLooping;
+    clock_t prevClock;
+};
 
 #endif // GAME_H_INCLUDED

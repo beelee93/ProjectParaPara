@@ -13,24 +13,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct _sprite {
-    SDL_Texture*    texture;   // pointer to texture data
-    SDL_Rect*       srcRects;  // array of sheet elements
-    int             elemCount; // number of elements
-} BL_Sprite;
+class BL_Sprite
+{
+public:
+    // Creates and sets the sprite
+    BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCount);
 
-// Creates and sets the sprite
-int BL_SpriteCreate(SDL_Renderer *renderer, const char* filename,
-    BL_Sprite* sprite, int elemCount);
+    // dtor
+    ~BL_Sprite();
 
-// Removes sprite from memory
-void BL_SpriteDestroy(BL_Sprite* sprite);
+    // Renders the sprite using the specified renderer and properties
+    void Render(int elemIndex,int dx, int dy, int dw, int dh,
+           double angle, SDL_Point* center,SDL_RendererFlip flip);
 
-// Renders the sprite using the specified renderer and properties
-void BL_SpriteRender(SDL_Renderer* renderer, BL_Sprite* sprite, int elemIndex,
-    int dx, int dy, int dw, int dh, double angle, SDL_Point* center,
-    SDL_RendererFlip flip);
+    int GetCount();
+    SDL_Texture* GetTexture();
+    SDL_Rect GetRect(int elem);
+    int GetInitialised();
 
-// Sets a sprite element's rect
-void BL_SpriteSetRect(BL_Sprite* sprite, int elemIndex, int x, int y, int w, int h);
+    // Sets a sprite element's rect
+    void SetRect(int elem, int x, int y, int w, int h);
+
+private:
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+    SDL_Rect* srcRects;
+    int elemCount;
+    int initialised;
+};
+
 #endif // SPRITE_H_INCLUDED

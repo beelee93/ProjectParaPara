@@ -7,9 +7,13 @@
 #define GAMEOBJECT_H_INCLUDED
 
 #include "Sprite.h"
-#include "Resource.h"
 
-typedef struct __object {
+// the null object, that has no sprite and does nothing
+#define OBJ_NULL        -1
+
+class BL_GameObject
+{
+public:
     int type;               // a unique type id
     int id;                 // a unique id assigned by object manager
 
@@ -28,8 +32,6 @@ typedef struct __object {
     uint8_t tintG;
     uint8_t tintB;
 
-    BL_Sprite* sprite;      // pointer to sprite associated with this object
-                            // can be NULL for no sprite
     double imageIndex;      // elemIndex to be drawn. Auto-updated.
     double imageSpeed;      // speed at which image index increments
 
@@ -40,47 +42,24 @@ typedef struct __object {
 
     int enabled;            // can this object receive updates?
     int visible;            // will this object be drawn?
-    int destroyed;          // has this object been destroyed?
 
-    int useStandardUpdate;  // apply the standard updates to it?
-                            // (auto update of position and imageIndex)
 
-    void* data;             // any extra data to be stored?
-} BL_GameObject;
+    BL_Sprite* sprite;      // pointer to sprite associated with this object
+                            // can be NULL for no sprite
 
-#define OBJ_NULL -1
+    BL_GameObject(int type);
+    ~BL_GameObject();
 
-//////// Functions ////////
-// Sets specified object to default settings (null object)
-void BL_ObjectDefault(BL_GameObject* obj);
+    // Be sure to call parent's functions
+    virtual void OnInit(int id, int type);  // you may set your sprite here
+    virtual void OnRender(double secs);
+    virtual void OnUpdate(double secs);
 
-// Sets obj to have the settings of
-// specified object type
-void BL_ObjectInit(BL_GameObject* obj, int type);
+    void SignalDestroy();
+    int IsBeingDestroyed();
 
-// Performs an update on specified object
-void BL_ObjectUpdate(BL_GameObject* obj, double secs);
-
-// Renders the object
-void BL_ObjectRender(BL_GameObject* obj, double secs, SDL_Renderer* renderer);
-
-// Sets the global sprite loader. If this is not null
-// and object type is not OBJ_NULL, then
-// whenever an object is initialised, its sprite is set
-// according to its object type
-// -Create a function BL_Sprite* <funcname>(int objectType)
-void BL_SetObjectSpriteLoader( BL_Sprite* (*pfnLoader)(int) );
-
-// Sets the global object initialiser. If this is not null,
-// and object type is not OBJ_NULL, then the pointer to the
-// object is passed to this function
-// -Create a function void <funcname>(BL_GameObject* obj, int objectType)
-void BL_SetObjectInitialiser( void (*pfnInitter)(BL_GameObject*, int));
-
-// Sets the global object updater. Non-null objects are
-// passed to this
-// -Create void <funcname>(BL_GameObject *obj, double seconds)
-void BL_SetObjectUpdater( void (*pfnUpdater)(BL_GameObject*,double) );
-
+protected:
+    int destroyFlag;        // signal for GOM to destroy this object
+};
 
 #endif // GAMEOBJECT_H_INCLUDED
