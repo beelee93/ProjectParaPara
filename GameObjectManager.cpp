@@ -4,6 +4,8 @@
 //////////////////////////////////////////
 #include "GameObjectManager.h"
 
+static SDL_Rect tempRect[2];
+
 // Initiliases the GOM
 BL_GOM::BL_GOM()
 {
@@ -27,7 +29,7 @@ BL_GOM::~BL_GOM()
 
 // Creates an object of specified type with its default
 // settings, and returns a pointer to it
-BL_GameObject* BL_GOM::CreateObject(int type)
+BL_GameObject* BL_GOM::CreateObject(int type, void* data)
 {
     BL_GameObject *obj = NULL;
     int i=0;
@@ -71,7 +73,7 @@ BL_GameObject* BL_GOM::CreateObject(int type)
             else
                 obj = OnCreateObject(type);
 
-            obj->OnInit(i, type);
+            obj->OnInit(i, type, data);
             obj->SetAttachedGOM(this);
 
             // put this object into manager
@@ -147,6 +149,32 @@ void BL_GOM::Render(double secs)
         if(objects[i]->IsBeingDestroyed()) continue;
         objects[i]->OnRender(secs);
     }
+}
+
+BL_GameObject** BL_GOM::FindObjectsOfType(int type, SDL_Rect* searchArea)
+{
+    int i=0, j=0;;
+    BL_GameObject* obj;
+
+    // Iterate through
+    for(i=0;i<capacity && j<26;i++)
+    {
+        obj=objects[i];
+        if(obj==NULL) continue;
+        if(obj->type != type) continue;
+        if(searchArea)
+        {
+            tempRect[0] = obj->sprite->GetRect(obj->imageIndex);
+            tempRect[0].x = obj->x;
+            tempRect[0].y = obj->y;
+            SDL_bool a;
+            if( !SDL_IntersectRect(tempRect, searchArea, tempRect+1) )
+                continue;
+        }
+        tempArray[j++] = obj;
+    }
+    tempArray[j] = NULL;
+    return tempArray;
 }
 
 BL_GameObject* BL_GOM::OnCreateObject(int type)

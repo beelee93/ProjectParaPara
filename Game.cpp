@@ -13,6 +13,8 @@ BL_Game::BL_Game(int argc, char** argv)
     windowWidth = 800;
     windowHeight = 600;
     objManager = NULL;
+    mainWindow = NULL;
+    mainRenderer = NULL;
 
     // Process cmd line
     ProcessCmdLine(argc, argv);
@@ -91,7 +93,7 @@ BL_Game::~BL_Game()
 // game's main loop
 void BL_Game::MainLoop()
 {
-    clock_t curClock;
+    uint32_t curClock;
     SDL_Event event;
     double secs;
 
@@ -192,6 +194,8 @@ int BL_Game::InitWindow(int fullscreen)
         BL_EHLog("InitWindow(): Could not create renderer.\n");
         return 0;
     }
+
+    SDL_SetRenderDrawBlendMode(mainRenderer, SDL_BLENDMODE_BLEND);
 
     return 1;
 }

@@ -25,7 +25,12 @@ public:
 
     // Creates an object of specified type with its default
     // settings, and returns a pointer to it
-    BL_GameObject* CreateObject(int type);
+    // can pass a data to it
+    BL_GameObject* CreateObject(int type, void* data = NULL);
+
+    // Finds and returns an array of object references of the said type
+    // Up to 25 max for the implementation
+    BL_GameObject** FindObjectsOfType(int type, SDL_Rect* searchArea = NULL);
 
     // Destroys and frees an object based on its id
     void DestroyObjectById(int id);
@@ -51,7 +56,7 @@ protected:
     int capacity;               // capacity of the internal array
     int objCount;               // a count of number of instantiated objects
     BL_GameObject** objects;     // list of pointers to objects
-
+    BL_GameObject* tempArray[26];  // for use by FindObjects
     void ExpandCapacity();
 
 };

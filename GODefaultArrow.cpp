@@ -8,26 +8,28 @@
 
 GODefaultArrow::GODefaultArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS) { }
 
-void GODefaultArrow::OnInit(int id, int type)
+void GODefaultArrow::OnInit(int id, int type, void* data)
 {
     disappearing = 0;
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS);
     imageSpeed=0;
-    imageIndex = rand() % 5;
-
+    if(!data)
+        imageIndex = rand() % 5;
+    else
+        imageIndex = *((int*)data);
     x = 208 + 80*imageIndex;
     y = 600;
-    vy= -200;
+    vy= ARROW_SPEED;
 }
 
 void GODefaultArrow::OnUpdate(double secs)
 {
     BL_GameObject::OnUpdate(secs);
 
-    if(y<=30 && !disappearing)
+    if(y<=ARROW_TARGET_Y && !disappearing)
     {
         disappearing = 1 ;
-        y=30;
+        y=ARROW_TARGET_Y;
         vy=0;
     }
 
@@ -45,4 +47,10 @@ void GODefaultArrow::OnUpdate(double secs)
             SignalDestroy();
         }
     }
+}
+
+void GODefaultArrow::Disappear()
+{
+    disappearing = 1;
+    vy = 0;
 }

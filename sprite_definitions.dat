@@ -3,13 +3,9 @@
 # Format should be easy to follow
 #
 
-COUNT 2
+COUNT 3
 
-# 0 - testing sprite for NULL
-SPRITE res/down_arrow.png 1
-RECT 0 0 256 256
-
-# 1 - Default arrows
+# 0 - Default arrows
 SPRITE res/default_arrows.png 5
 RECT 0 0 64 64
 RECT 64 0 64 64
@@ -17,4 +13,14 @@ RECT 128 0 64 64
 RECT 192 0 64 64
 RECT 0 64 64 64
 
+# 1 - Stationary arrows BW
+SPRITE res/default_arrows_bw.png 5
+RECT 0 0 64 64
+RECT 64 0 64 64
+RECT 128 0 64 64
+RECT 192 0 64 64
+RECT 0 64 64 64
 
+# 2 - Shockwave effect
+SPRITE res/shockwave.png 1
+RECT 0 0 256 256

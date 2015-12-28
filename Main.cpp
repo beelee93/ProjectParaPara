@@ -7,14 +7,9 @@ static BL_SpriteList* sprites;
 // main game
 static BL_Game* game = NULL;
 
-// Global Game object manager
-static BL_GOM* gom = NULL;
-
 int main(int argc, char** argv)
 {
     game = new GameParaPara(argc, argv);
-    gom = new GOMParaPara();
-    game->SetObjectManager(gom);
 
     // init the game
     if(game->GetInitialised())
@@ -29,7 +24,6 @@ int main(int argc, char** argv)
         }
     }
 
-    delete gom;
     delete game;
     delete sprites;
 

@@ -26,6 +26,8 @@ public:
     double vx;              // velocities
     double vy;
 
+    uint8_t depth;              // draw order
+
     double alpha;           // image alpha
 
     uint8_t tintR;         // tint colors
@@ -51,7 +53,7 @@ public:
     ~BL_GameObject();
 
     // Be sure to call parent's functions
-    virtual void OnInit(int id, int type);  // you may set your sprite here
+    virtual void OnInit(int id, int type, void* data=NULL);  // you may set your sprite here
     virtual void OnRender(double secs);
     virtual void OnUpdate(double secs);
 

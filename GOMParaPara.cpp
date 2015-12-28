@@ -14,8 +14,8 @@ BL_GameObject* GOMParaPara::OnCreateObject(int type)
         case OBJ_DEFAULT_ARROWS:
             return new GODefaultArrow();
 
-        case OBJ_DOWN_ARROW:
-            return new GODownArrow();
+        case OBJ_DEFAULT_ARROWS_BW:
+            return new GOStationaryArrow();
     }
 
     return BL_GOM::OnCreateObject(type);

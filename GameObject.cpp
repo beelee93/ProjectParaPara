@@ -32,7 +32,7 @@ BL_GameObject::BL_GameObject(int type)
 
 BL_GameObject::~BL_GameObject() { }
 
-void BL_GameObject::OnInit(int id, int type)
+void BL_GameObject::OnInit(int id, int type, void* data)
 {
     this->type = type;
     this->id = id;

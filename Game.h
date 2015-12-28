@@ -60,6 +60,7 @@ protected:
     SDL_Window* mainWindow;
     BL_GOM* objManager;
 
+    int initialised;
     int isFullscreen;
     int windowWidth;
     int windowHeight;
@@ -68,10 +69,9 @@ protected:
 
 private:
     void ProcessCmdLine(int argc, char** argv);
-    int initialised;
     int initFlags;
     int isGameLooping;
-    clock_t prevClock;
+    uint32_t prevClock;
 };
 
 #endif // GAME_H_INCLUDED

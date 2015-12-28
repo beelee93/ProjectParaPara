@@ -5,75 +5,272 @@
 //////////////////////////////////////////
 
 #include "Globals.h"
-#include "irrKlang.h"
-#include "SDL_FontCache.h"
-
+// sound control
 using namespace irrklang;
-// timer
-static double countdown = 2.0;
-static ISoundEngine* soundEngine = NULL;
-static ISoundSource* soundSrc = NULL;
-static ISound* snd = NULL;
+static BL_Audio* audio = NULL;
 
+static BL_GOM* gom = NULL;
 static FC_Font* statusFont = NULL;
 
-static uint32_t songPos = 0;
-static double songTimer = 0;
-static uint32_t songLength = 0;
+static double timer = 0;
+static ISound* music = NULL;
 
-static double data[1024] = {0};
+// Test data for arrows
+typedef struct __data {
+    double timestamp;
+    uint16_t arrow;
+} Data;
+
+Data data[1024]= {0};
 static int dataIndex = 0;
-static int dataStop = 0;
-static int filled = 0;
+static int dataCount = 0;
+static uint16_t prevKeys = 0;
+static double accuracy = 1;
+static GOStationaryArrow* bwArrows[5];
 
+///////////////////////////////////////////////////////////////////
 GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 {
-    soundEngine = irrklang::createIrrKlangDevice();
-    soundSrc=soundEngine->addSoundSourceFromFile("res/IntoYourHeart.mp3", ESM_AUTO_DETECT, true);
+    // set initial game state
+    gameState = GS_Splash;
+    fadeTimer = 0.0;
+    fadeMode = 0;
+    fadeTarget = GS_Null;
 
+    // initialise gom
+    gom = new GOMParaPara();
+    this->SetObjectManager(gom);
+
+    ChangeGameState(GS_Splash);
+
+    // initialise audio system
+    audio = new BL_Audio();
+    if(!audio)
+    {
+        this->initialised = 0;
+        BL_EHLog("GameParaPara(): Failed to create audio controller.\n");
+        return;
+    }
+
+    // load audio
+    audio->AddAudio("res/Yesterday.mp3", 1);
+
+    // create fonts
     statusFont = FC_CreateFont();
+
+    if(!statusFont)
+    {
+        this->initialised = 0;
+        BL_EHLog("GameParaPara(): Failed to create font.\n");
+        return;
+    }
 
     // use a system installed font
     FC_LoadFont(statusFont, mainRenderer, "/usr/share/fonts/truetype/freefont/FreeMono.ttf",
-           16, FC_MakeColor(255,255,255,255), TTF_STYLE_NORMAL);
+         16, FC_MakeColor(255,255,255,255), TTF_STYLE_NORMAL);
 }
 
+///////////////////////////////////////////////////////////////////
 GameParaPara::~GameParaPara()
 {
-    if(snd)
-    {
-        snd->stop();
-        snd->drop();
-    }
+    // free GOM
+    if(gom) delete gom;
 
-    FC_FreeFont(statusFont);
+    // free audio
+    if(audio) delete audio;
 
-    if(soundEngine)soundEngine->drop();
+    // free fonts
+    if(statusFont) FC_FreeFont(statusFont);
 }
 
+///////////////////////////////////////////////////////////////////
 void GameParaPara::OnUpdate(double secs)
 {
     BL_Game::OnUpdate(secs);
+    const uint8_t* keys = SDL_GetKeyboardState(NULL);
+    uint16_t currKeys = 0, checkedKeys = 0;
 
-    if(snd)
+    switch(gameState)
     {
-        songTimer += secs;
-        songPos = snd->getPlayPosition();
-
-        if(filled && dataIndex<dataStop)
+    //////////// UPDATE FOR SPLASHSCREEN ////////////
+    case GS_Splash:
+        timer -= secs;
+        if(timer<=0)
         {
-             while(songTimer >= data[dataIndex]-2.85)
-             {
-                 if(dataIndex>=dataStop) break;
-                 objManager->CreateObject(OBJ_DEFAULT_ARROWS);
-                 dataIndex++;
-             }
+            gameState = GS_MainMenu;
+            timer = 0;
+        }
+        break;
+
+    //////////// UPDATE FOR ARENA ////////////
+    case GS_Arena:
+        int tempArenaX, tempArenaY;
+        if(!arenaStarted)
+        {
+            // Preparations
+            timer -= secs;
+            if(timer<=0)
+            {
+                arenaStarted = 1;
+
+                // play arena song
+                music = audio->PlayAudio(0, 0);
+                timer = 0;
+                dataIndex = 0;
+
+                for(tempArenaX=0;tempArenaX<5;tempArenaX++)
+                    bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
+                                            OBJ_DEFAULT_ARROWS_BW, &tempArenaX);
+            }
+        }
+        else
+        {
+            // Playing time!
+            timer+=secs;
+
+            while(timer>=(data[dataIndex].timestamp - FlightTime) && dataIndex < dataCount)
+            {
+                for(tempArenaX = 0;tempArenaX<5;tempArenaX++)
+                {
+                    if(data[dataIndex].arrow & (0x1 << (tempArenaX*2)))
+                    {
+                        tempArenaY = 4-tempArenaX;
+                        objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaY);
+                    }
+                }
+                dataIndex++;
+            }
+
+            // get current keys
+            currKeys = (
+                keys[SDL_SCANCODE_Y]<<8 |
+                keys[SDL_SCANCODE_U]<<6 |
+                keys[SDL_SCANCODE_I]<<4 |
+                keys[SDL_SCANCODE_O]<<2 |
+                keys[SDL_SCANCODE_P] );
+            checkedKeys = ~prevKeys & currKeys;
+            if( checkedKeys ) // check for rising edge
+            {
+                SDL_Rect tempRect;
+                tempRect.x = 208;
+                tempRect.y = 90;
+                tempRect.w = 384;
+                tempRect.h = 2;
+
+                BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
+                                            OBJ_DEFAULT_ARROWS, &tempRect);
+                for(tempArenaX=0;tempArenaX<5;tempArenaX++)
+                {
+                    if(checkedKeys & (0x1 << (tempArenaX*2)))
+                    {
+                        tempArenaY = 4-tempArenaX;
+                        bwArrows[tempArenaY]->Flash();
+
+                        for(tempArenaY=0;nearObjs[tempArenaY]!=NULL;tempArenaY++)
+                        {
+                            if(nearObjs[tempArenaY]->imageIndex == tempArenaX &&
+                                nearObjs[tempArenaY]->alpha > 0.9)
+                            {
+                                accuracy += 1-(
+                                 (nearObjs[tempArenaY]->y >64 ? nearObjs[tempArenaY]->y:64)-64)/64.0;
+                                accuracy /= 2;
+                                ((GODefaultArrow*)nearObjs[tempArenaY])->Disappear();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            prevKeys = currKeys;
+        }
+        break;
+
+    //////////// UPDATE FOR EDITOR ////////////
+    case GS_Editor:
+        timer+=secs;
+
+        // get current keys
+        currKeys = (
+            keys[SDL_SCANCODE_Y]<<8 |
+            keys[SDL_SCANCODE_U]<<6 |
+            keys[SDL_SCANCODE_I]<<4 |
+            keys[SDL_SCANCODE_O]<<2 |
+            keys[SDL_SCANCODE_P] );
+
+        checkedKeys = ~prevKeys & currKeys;
+        if( checkedKeys ) // check for rising edge
+        {
+            data[dataIndex].timestamp = timer - 0.1;
+            data[dataIndex].arrow = checkedKeys;
+            dataIndex++;
         }
 
+        if(dataIndex>1023) dataIndex=1023;
+        prevKeys = currKeys;
+        break;
+    }
+
+    // Transitional fade mechanism
+    if(fadeMode)
+    {
+        if(fadeMode == FM_FADE_OUT)
+        {
+            fadeTimer += secs;
+            if(fadeTimer>1.0) // we have occluded the entire screen
+            {
+                fadeTimer = 1.0;
+                ChangeGameState(fadeTarget);
+                fadeMode = FM_FADE_IN;
+            }
+        }
+        else if(fadeMode == FM_FADE_IN)
+        {
+            fadeTimer -= secs;
+            if(fadeTimer<0) // occlusion has disappeared
+            {
+                fadeTimer = 0;
+                fadeMode = FM_FADE_STOP;
+            }
+        }
     }
 }
 
+///////////////////////////////////////////////////////////////////
+void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
+{
+    switch(gameState)
+    {
+    case GS_Arena:
+        SDL_SetRenderDrawColor(renderer,0,0,0,255);
+        SDL_RenderClear(renderer);
+        if(objManager) objManager->Render(secs);
+        FC_Draw(statusFont, renderer, 3,48, "Song time: %f\nAvg Accuracy: %f",
+            timer, accuracy);
 
+        break;
+
+    default:
+        SDL_SetRenderDrawColor(renderer,0x64,0x95,0xED,255);
+        SDL_RenderClear(renderer);
+        if(objManager) objManager->Render(secs);
+        break;
+    }
+
+
+    // Transition fade out mechanism
+    if(fadeMode)
+    {
+        SDL_SetRenderDrawColor(renderer,0,0,0,(int)(fadeTimer * 255));
+        SDL_RenderFillRect(renderer, NULL);
+    }
+
+    FC_Draw(statusFont, renderer, 3,3, "FPS: %d\nGameState: %d",
+            (int)(1/secs), gameState);
+
+    SDL_RenderPresent(renderer);
+}
+
+///////////////////////////////////////////////////////////////////
 void GameParaPara::OnEvent(SDL_Event* event, double secs)
 {
     BL_Game::OnEvent(event, secs);
@@ -85,7 +282,10 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
             switch(event->key.keysym.sym)
             {
                 case SDLK_ESCAPE:   // end game
-                    SignalExit();
+                    if(gameState == GS_MainMenu)
+                        SignalExit();
+                    else if(gameState == GS_Arena)
+                        FadeToGameState(GS_MainMenu);
                     break;
                 case SDLK_F2:       // toggle fullscreen
                     SetFullscreen(SF_TOGGLE);
@@ -93,59 +293,105 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                 case SDLK_a:
                     GetObjectManager()->CreateObject(OBJ_DEFAULT_ARROWS);
                     break;
-                case SDLK_b:
-                    if(!snd)
-                    {
-                        snd = soundEngine->play2D(soundSrc, false, true, true);
-                        songPos = 0;
-                        songTimer = 0;
-                        dataIndex = 0;
-                        songLength = snd->getPlayLength();
-                        if(snd)
-                            snd->setIsPaused(false);
-                    }
-                    else
-                    {
-                        if(!filled)
-                        {
-                            dataStop = dataIndex;
-                            filled=1;
-                        }
-
-                        snd->stop();
-                        snd->drop();
-                        snd=NULL;
-                    }
-                    break;
-
 
             }
             break;
+
         ///// Keydown Event /////
         case SDL_KEYDOWN:
             switch(event->key.keysym.sym)
             {
-                case SDLK_y:
-                    if(!filled)
-                    {
-                        data[dataIndex++] = songTimer - 0.18;
-                        if(dataIndex>1023) dataIndex = 1023;
-                    }
-                    break;
+            case SDLK_RETURN:
+                if(gameState == GS_MainMenu)
+                {
+                    // Transition to SongSelection
+                    FadeToGameState(/*GS_SongSelection*/ GS_Arena);
+                }
+                break;
+            case SDLK_F12:
+                if(gameState == GS_MainMenu)
+                {
+                    // Transition to editor
+                    FadeToGameState(GS_Editor);
+                }
+                else if(gameState == GS_Editor)
+                {
+                    // Transition back to Main menu
+                    FadeToGameState(GS_MainMenu);
+                }
+                break;
             }
             break;
      }
 }
 
-void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
+///////////////////////////////////////////////////////////////////
+// Raised upon leaving a game state. Argument is the state we
+// are leaving
+void GameParaPara::OnExitState(GameState leavingState)
 {
-    SDL_SetRenderDrawColor(renderer,0,0,0,255);
-    SDL_RenderClear(renderer);
+    switch(leavingState)
+    {
+    case GS_Arena:
+        if(music)
+        {
+            music->stop();
+            music->drop();
+            music = NULL;
+        }
+        break;
+    case GS_Editor:
+        if(music)
+        {
+            music->stop();
+            music->drop();
+            music = NULL;
+        }
+        dataCount = dataIndex;
+        break;
+    }
 
-    if(objManager) objManager->Render(secs);
+    // remove all objects in scene
+    objManager->DestroyAllObjects();
+}
 
-    FC_Draw(statusFont, renderer, 3,3, "FPS: %d\nPos: %d/%d (%f)",
-            (int)(1/secs), songPos,songLength, songTimer);
+///////////////////////////////////////////////////////////////////
+// Raised upon entering a new game state. Argument is the
+// current state
+void GameParaPara::OnEnterState(GameState newState)
+{
+    switch(newState)
+    {
+    case GS_Splash:
+        timer = 2.0;
+        break;
+    case GS_Arena:
+        timer = 2.0;
+        arenaStarted = 0;
+        break;
+    case GS_Editor:
+        timer=0.0;
+        dataIndex=0;
+        music = audio->PlayAudio(0,0);
+        break;
+    }
+}
 
-    SDL_RenderPresent(renderer);
+///////////////////////////////////////////////////////////////////
+void GameParaPara::ChangeGameState(GameState newState)
+{
+    OnExitState(gameState);
+    gameState = newState;
+    OnEnterState(gameState);
+}
+
+///////////////////////////////////////////////////////////////////
+// Transitional fade mechanism
+void GameParaPara::FadeToGameState(GameState state)
+{
+    if(fadeTarget != state)
+    {
+        fadeMode = FM_FADE_OUT; // fade out
+        fadeTarget = state;
+    }
 }

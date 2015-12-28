@@ -41,7 +41,8 @@ Source code summary
 
     Inherited by:
     -GODefaultArrow
-    -GODownArrow
+    -GOStationaryArrow
+    -GOShockwave
 
 5. GameObjectManager.cpp
     Manages the creation and destruction of objects
