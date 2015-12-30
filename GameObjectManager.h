@@ -13,6 +13,7 @@
 #define GAMEOBJECTMANAGER_H_INCLUDED
 
 #include "GameObject.h"
+#include "RenderQueue.h"
 #include <stdlib.h>
 
 #define CAPACITY_INC 20         /* rate of expansion of GOM capacity */
@@ -57,6 +58,7 @@ protected:
     int objCount;               // a count of number of instantiated objects
     BL_GameObject** objects;     // list of pointers to objects
     BL_GameObject* tempArray[26];  // for use by FindObjects
+    BL_RenderQueue* renderQueue;
     void ExpandCapacity();
 
 };

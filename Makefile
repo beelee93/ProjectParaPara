@@ -1,7 +1,8 @@
 OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameObjectManager.o Sprite.o SpriteLoader.o \
 	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
-	   GOStationaryArrow.o Main.o SDL_FontCache.o Audio.o
+	   GOStationaryArrow.o Main.o SDL_FontCache.o Audio.o \
+	   RenderQueue.o
 
 GOH = Globals.h GameObject.h
 
@@ -42,6 +43,9 @@ SpriteLoader.o : SpriteLoader.h Sprite.h ErrorHandler.h SpriteLoader.cpp
 
 Audio.o : ErrorHandler.h Audio.cpp
 	$(CC) $(CFLAGS) $(LIBS) Audio.cpp
+
+RenderQueue.o : RenderQueue.h GameObject.h RenderQueue.cpp
+	$(CC) $(CFLAGS) $(LIBS) RenderQueue.cpp
 
 SDL_FontCache.o : SDL_FontCache.h SDL_FontCache.c
 	$(CC) $(CFLAGS) $(LIBS) SDL_FontCache.c

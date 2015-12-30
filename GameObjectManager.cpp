@@ -15,11 +15,16 @@ BL_GOM::BL_GOM()
 
     // zero out everything (set all to null pointers)
     memset(objects, 0, sizeof(BL_GameObject*)*20);
+
+    // create render queue
+    renderQueue = new BL_RenderQueue();
 }
 
 // Free the GOM
 BL_GOM::~BL_GOM()
 {
+    delete renderQueue;
+
     // destroy and free all objects
     DestroyAllObjects();
 
@@ -135,6 +140,8 @@ void BL_GOM::Update(double secs)
             DestroyObjectById(i);
             continue;
         }
+        // queue object for rendering
+        renderQueue->QueueObject(objects[i]);
         objects[i]->OnUpdate(secs);
     }
 }
@@ -142,13 +149,7 @@ void BL_GOM::Update(double secs)
 // Renders all active objects in the list
 void BL_GOM::Render(double secs)
 {
-    int i;
-    for (i=0;i<capacity;i++)
-    {
-        if(!objects[i]) continue;
-        if(objects[i]->IsBeingDestroyed()) continue;
-        objects[i]->OnRender(secs);
-    }
+    renderQueue->Render(secs);
 }
 
 BL_GameObject** BL_GOM::FindObjectsOfType(int type, SDL_Rect* searchArea)

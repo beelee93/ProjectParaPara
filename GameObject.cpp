@@ -49,6 +49,7 @@ void BL_GameObject::OnInit(int id, int type, void* data)
     originX = originY = 0;
     imageAngle = 0;
     destroyFlag = 0;
+    depth = 0;
 }
 
 void BL_GameObject::OnRender(double secs)
