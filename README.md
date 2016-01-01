@@ -45,6 +45,7 @@ Inherited by:
 * GODefaultArrow
 * GOStationaryArrow
 * GOShockwave
+* GOPinkFlash
 
 ###GameObjectManager.cpp
 

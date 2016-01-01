@@ -13,6 +13,8 @@ BL_GOM::BL_GOM()
     objCount = 0;
     objects = (BL_GameObject**)malloc(sizeof(BL_GameObject*)*20);
 
+    mainRenderer = NULL;
+
     // zero out everything (set all to null pointers)
     memset(objects, 0, sizeof(BL_GameObject*)*20);
 
@@ -126,6 +128,9 @@ void BL_GOM::DestroyAllObjects()
     }
 
     objCount=0;
+
+    // purge render queue to prevent rendering
+    renderQueue->Purge();
 }
 
 // Updates all active objects in the list
@@ -191,4 +196,14 @@ int BL_GOM::GetObjectCount()
 int BL_GOM::GetCapacity()
 {
     return capacity;
+}
+
+void BL_GOM::SetAttachedRenderer(SDL_Renderer* renderer)
+{
+    mainRenderer = renderer;
+}
+
+SDL_Renderer* BL_GOM::GetAttachedRenderer()
+{
+    return mainRenderer;
 }

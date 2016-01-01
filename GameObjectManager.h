@@ -48,6 +48,9 @@ public:
     int GetObjectCount();
     int GetCapacity();
 
+    SDL_Renderer* GetAttachedRenderer();
+    void SetAttachedRenderer(SDL_Renderer* renderer);
+
     // Override this to provide conversion between
     // integer type constant to the appropriate
     // BL_GameObject descendents
@@ -59,6 +62,7 @@ protected:
     BL_GameObject** objects;     // list of pointers to objects
     BL_GameObject* tempArray[26];  // for use by FindObjects
     BL_RenderQueue* renderQueue;
+    SDL_Renderer* mainRenderer;
     void ExpandCapacity();
 
 };

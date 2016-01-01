@@ -61,7 +61,7 @@ void BL_RenderQueue::QueueObject(BL_GameObject* obj)
     {
         // non-empty. we search for appropriate position
         // -descending order
-        if(obj->depth<=0) // lowest possible -> put at tail
+        if(obj->depth<=activeQueueTail->item->depth) // lowest possible -> put at tail
         {
             activeQueueTail->next = node;
             activeQueueTail = node;
@@ -133,6 +133,8 @@ void BL_RenderQueue::Purge()
         free(node);
         node = temp;
     }
+
+    queueHeads[INACTIVE] = queueHeads[ACTIVE] = NULL;
 }
 
 BL_RenderQueue::~BL_RenderQueue()

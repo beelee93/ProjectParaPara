@@ -26,7 +26,7 @@ public:
     double vx;              // velocities
     double vy;
 
-    uint8_t depth;              // draw order
+    int depth;              // draw order
 
     double alpha;           // image alpha
 

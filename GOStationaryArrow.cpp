@@ -17,6 +17,7 @@ void GOStationaryArrow::OnInit(int id, int type, void* data)
     this->y = 16;
     this->alpha = 0;
     this->x = 208 + 80*imageIndex;
+    flasher = NULL;
 }
 
 void GOStationaryArrow::OnUpdate(double secs)
@@ -41,4 +42,10 @@ void GOStationaryArrow::OnUpdate(double secs)
 void GOStationaryArrow::Flash()
 {
     alpha=0.8;
+    if(flasher)flasher->Flash();
+}
+
+void GOStationaryArrow::SetAttachedFlash(GOPinkFlash* flash)
+{
+    flasher = flash;
 }

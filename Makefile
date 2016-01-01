@@ -2,7 +2,7 @@ OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameObjectManager.o Sprite.o SpriteLoader.o \
 	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
 	   GOStationaryArrow.o Main.o SDL_FontCache.o Audio.o \
-	   RenderQueue.o
+	   RenderQueue.o GOPinkFlash.o
 
 GOH = Globals.h GameObject.h
 
@@ -58,6 +58,9 @@ GODefaultArrow.o : $(GOH) GODefaultArrow.cpp
 
 GOStationaryArrow.o : $(GOH) GOStationaryArrow.cpp
 	$(CC)  $(CFLAGS) $(LIBS) GOStationaryArrow.cpp
+
+GOPinkFlash.o : $(GOH) GOPinkFlash.cpp
+	$(CC)  $(CFLAGS) $(LIBS) GOPinkFlash.cpp
 
 GameParaPara.o : Game.h Globals.h GameParaPara.cpp
 	$(CC)  $(CFLAGS) $(LIBS) GameParaPara.cpp

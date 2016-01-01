@@ -89,6 +89,7 @@ void GameParaPara::OnUpdate(double secs)
     BL_Game::OnUpdate(secs);
     const uint8_t* keys = SDL_GetKeyboardState(NULL);
     uint16_t currKeys = 0, checkedKeys = 0;
+    BL_GameObject* tempObj;
 
     switch(gameState)
     {
@@ -119,8 +120,13 @@ void GameParaPara::OnUpdate(double secs)
                 dataIndex = 0;
 
                 for(tempArenaX=0;tempArenaX<5;tempArenaX++)
+                {
                     bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
                                             OBJ_DEFAULT_ARROWS_BW, &tempArenaX);
+                    tempObj = objManager->CreateObject(OBJ_PINK_FLASH, &tempArenaX);
+                    bwArrows[tempArenaX]->SetAttachedFlash((GOPinkFlash*)tempObj);
+                }
+
             }
         }
         else

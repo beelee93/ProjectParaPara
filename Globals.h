@@ -12,6 +12,7 @@
 #define OBJ_DEFAULT_ARROWS      0
 #define OBJ_DEFAULT_ARROWS_BW   1
 #define OBJ_SHOCKWAVE           2
+#define OBJ_PINK_FLASH          9000
 
 #include "GameObjectManager.h"
 #include "Game.h"
@@ -90,6 +91,18 @@ private:
     int disappearing;
 };
 
+class GOPinkFlash : public BL_GameObject
+{
+public:
+    GOPinkFlash();
+    void OnInit(int id, int type, void* data=NULL);
+    void OnUpdate(double secs);
+    void Flash();
+    void OnRender(double secs);
+private:
+    SDL_Rect drawRect;
+};
+
 class GOStationaryArrow : public BL_GameObject
 {
 public:
@@ -97,6 +110,22 @@ public:
     void OnInit(int id, int type, void* data=NULL);
     void OnUpdate(double secs);
     void Flash();
+
+    void SetAttachedFlash(GOPinkFlash* flash);
+
+private:
+    GOPinkFlash* flasher;
 };
 
+class GOShockwave : public BL_GameObject
+{
+public:
+    GOShockwave();
+    void OnInit(int id, int type, void* data = NULL);
+    void OnUpdate(double secs);
+
+private:
+    int firstUpdate;
+    double xstart, ystart;
+};
 #endif // RESOURCE_H_INCLUDED

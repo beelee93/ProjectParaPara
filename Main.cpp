@@ -16,6 +16,8 @@ int main(int argc, char** argv)
     {
         // Create sprite list
         sprites = new BL_SpriteList(game->GetMainRenderer(), "sprite_definitions.dat");
+        SDL_SetTextureBlendMode(sprites->GetSprite(OBJ_SHOCKWAVE)->GetTexture(),
+                                SDL_BLENDMODE_ADD);
         if(!sprites->GetInitialised())
             BL_EHLog("main(): Cannot load sprite definitions.\n");
         else

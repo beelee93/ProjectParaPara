@@ -246,6 +246,7 @@ BL_GOM* BL_Game::GetObjectManager()
 void BL_Game::SetObjectManager(BL_GOM* mgr)
 {
     objManager = mgr;
+    objManager->SetAttachedRenderer(mainRenderer);
 }
 
 int BL_Game::GetInitialised()
