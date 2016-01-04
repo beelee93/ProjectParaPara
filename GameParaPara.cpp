@@ -5,6 +5,13 @@
 //////////////////////////////////////////
 
 #include "Globals.h"
+
+#ifdef WIN32
+#define SYSFONT "C:/Windows/Fonts/Arial.ttf"
+#else
+#define SYSFONT "/usr/share/fonts/truetype/freefont/FreeMono.ttf"
+#endif
+
 // sound control
 using namespace irrklang;
 static BL_Audio* audio = NULL;
@@ -36,6 +43,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeTimer = 0.0;
     fadeMode = 0;
     fadeTarget = GS_Null;
+	currInput = prevInput = 0;
 
     // initialise gom
     gom = new GOMParaPara();
@@ -66,7 +74,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     }
 
     // use a system installed font
-    FC_LoadFont(statusFont, mainRenderer, "/usr/share/fonts/truetype/freefont/FreeMono.ttf",
+    FC_LoadFont(statusFont, mainRenderer, SYSFONT,
          16, FC_MakeColor(255,255,255,255), TTF_STYLE_NORMAL);
 }
 
@@ -87,8 +95,8 @@ GameParaPara::~GameParaPara()
 void GameParaPara::OnUpdate(double secs)
 {
     BL_Game::OnUpdate(secs);
-    const uint8_t* keys = SDL_GetKeyboardState(NULL);
-    uint16_t currKeys = 0, checkedKeys = 0;
+	uint8_t riseKey = 0, fallKey = 0;
+	SDL_Rect tempRect = {0};
     BL_GameObject* tempObj;
 
     switch(gameState)
@@ -140,54 +148,55 @@ void GameParaPara::OnUpdate(double secs)
                 {
                     if(data[dataIndex].arrow & (0x1 << (tempArenaX*2)))
                     {
-                        tempArenaY = 4-tempArenaX;
-                        objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaY);
+                        objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaX);
                     }
                 }
                 dataIndex++;
             }
 
-            // get current keys
-            currKeys = (
-                keys[SDL_SCANCODE_Y]<<8 |
-                keys[SDL_SCANCODE_U]<<6 |
-                keys[SDL_SCANCODE_I]<<4 |
-                keys[SDL_SCANCODE_O]<<2 |
-                keys[SDL_SCANCODE_P] );
-            checkedKeys = ~prevKeys & currKeys;
-            if( checkedKeys ) // check for rising edge
-            {
-                SDL_Rect tempRect;
-                tempRect.x = 208;
-                tempRect.y = 90;
-                tempRect.w = 384;
-                tempRect.h = 2;
+			// Poll input
+			PollInput();
+			riseKey = ~prevInput & currInput; // look for rising edge
+			fallKey = prevInput & ~currInput; // look for falling edge
 
-                BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
-                                            OBJ_DEFAULT_ARROWS, &tempRect);
-                for(tempArenaX=0;tempArenaX<5;tempArenaX++)
-                {
-                    if(checkedKeys & (0x1 << (tempArenaX*2)))
-                    {
-                        tempArenaY = 4-tempArenaX;
-                        bwArrows[tempArenaY]->Flash();
+			// look for flying arrows
+			tempRect.x = 208;
+			tempRect.y = 90;
+			tempRect.w = 384;
+			tempRect.h = 2;
+			BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
+				OBJ_DEFAULT_ARROWS, &tempRect);
+			
+			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++) // loop through each arrow
+			{
+				if (currInput & (1 << tempArenaX))
+				{
+					// we flash the corresponding arrow
+					bwArrows[tempArenaX]->Flash();
+				}
 
-                        for(tempArenaY=0;nearObjs[tempArenaY]!=NULL;tempArenaY++)
-                        {
-                            if(nearObjs[tempArenaY]->imageIndex == tempArenaX &&
-                                nearObjs[tempArenaY]->alpha > 0.9)
-                            {
-                                accuracy += 1-(
-                                 (nearObjs[tempArenaY]->y >64 ? nearObjs[tempArenaY]->y:64)-64)/64.0;
-                                accuracy /= 2;
-                                ((GODefaultArrow*)nearObjs[tempArenaY])->Disappear();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            prevKeys = currKeys;
+				// is it a rising or falling edge?
+				if (riseKey)
+				{
+					// we look for singular arrows and beginning of arrow chain
+					// loop through all flying arrows detected
+					for (tempArenaY = 0; nearObjs[tempArenaY] != NULL; tempArenaY++)
+					{
+						tempObj = nearObjs[tempArenaY];
+						if (tempArenaX == tempObj->imageIndex && tempObj->alpha > 0.9)
+						{
+							accuracy += 1 - (
+								(tempObj->y >64 ? tempObj->y : 64) - 64) / 64.0;
+							// make it disappear
+							((GODefaultArrow*)tempObj)->Disappear();
+						}
+					}
+				}
+				else if (fallKey)
+				{
+					// we look for end of arrow chain
+				}		
+			}
         }
         break;
 
@@ -196,23 +205,23 @@ void GameParaPara::OnUpdate(double secs)
         timer+=secs;
 
         // get current keys
-        currKeys = (
-            keys[SDL_SCANCODE_Y]<<8 |
-            keys[SDL_SCANCODE_U]<<6 |
-            keys[SDL_SCANCODE_I]<<4 |
-            keys[SDL_SCANCODE_O]<<2 |
-            keys[SDL_SCANCODE_P] );
+		PollInput();
 
-        checkedKeys = ~prevKeys & currKeys;
-        if( checkedKeys ) // check for rising edge
+		riseKey = ~prevInput & currInput;
+		fallKey = prevInput & ~currInput;
+
+        if( riseKey ) // check for rising edge
         {
             data[dataIndex].timestamp = timer - 0.1;
-            data[dataIndex].arrow = checkedKeys;
+			data[dataIndex].arrow = (riseKey & 0x1) |
+				((riseKey & 0x2) << 1) |
+				((riseKey & 0x4) << 2) |
+				((riseKey & 0x8) << 3) |
+				((riseKey & 0x10) << 4);
             dataIndex++;
         }
 
         if(dataIndex>1023) dataIndex=1023;
-        prevKeys = currKeys;
         break;
     }
 
@@ -277,6 +286,27 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
 }
 
 ///////////////////////////////////////////////////////////////////
+void GameParaPara::PollInput()
+{
+	prevInput = currInput;
+#ifdef USE_KEYBOARD_INPUT
+	// Keyboard
+	const uint8_t* keys = SDL_GetKeyboardState(NULL);
+	
+	currInput = (
+		keys[SDL_SCANCODE_Y]      |
+		keys[SDL_SCANCODE_U] << 1 |
+		keys[SDL_SCANCODE_I] << 2 |
+		keys[SDL_SCANCODE_O] << 3 |
+		keys[SDL_SCANCODE_P] << 4);
+#endif
+
+#ifdef USE_GPIO_INPUT
+	// Look at GPIO pins
+#endif
+}
+
+///////////////////////////////////////////////////////////////////
 void GameParaPara::OnEvent(SDL_Event* event, double secs)
 {
     BL_Game::OnEvent(event, secs);
@@ -292,9 +322,6 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                         SignalExit();
                     else if(gameState == GS_Arena)
                         FadeToGameState(GS_MainMenu);
-                    break;
-                case SDLK_F2:       // toggle fullscreen
-                    SetFullscreen(SF_TOGGLE);
                     break;
                 case SDLK_a:
                     GetObjectManager()->CreateObject(OBJ_DEFAULT_ARROWS);
@@ -314,7 +341,7 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                     FadeToGameState(/*GS_SongSelection*/ GS_Arena);
                 }
                 break;
-            case SDLK_F12:
+            case SDLK_F10:
                 if(gameState == GS_MainMenu)
                 {
                     // Transition to editor
@@ -374,11 +401,13 @@ void GameParaPara::OnEnterState(GameState newState)
     case GS_Arena:
         timer = 2.0;
         arenaStarted = 0;
+		prevInput = currInput = 0;
         break;
     case GS_Editor:
         timer=0.0;
         dataIndex=0;
         music = audio->PlayAudio(0,0);
+		prevInput = currInput = 0;
         break;
     }
 }

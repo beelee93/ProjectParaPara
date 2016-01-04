@@ -19,7 +19,7 @@ void GODefaultArrow::OnInit(int id, int type, void* data)
         imageIndex = *((int*)data);
     x = 208 + 80*imageIndex;
     y = 600;
-    vy= ARROW_SPEED;
+    vy= -ARROW_SPEED;
 }
 
 void GODefaultArrow::OnUpdate(double secs)

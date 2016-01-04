@@ -9,6 +9,7 @@
 BL_Game::BL_Game(int argc, char** argv)
 {
     initFlags = 0;
+	isFullscreen = 0;
     isGameLooping = 1;
     windowWidth = 800;
     windowHeight = 600;

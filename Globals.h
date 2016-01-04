@@ -8,6 +8,9 @@
 #ifndef RESOURCE_H_INCLUDED
 #define RESOURCE_H_INCLUDED
 
+/////// Config ////////
+#define USE_KEYBOARD_INPUT
+
 /////// Objects ////////
 #define OBJ_DEFAULT_ARROWS      0
 #define OBJ_DEFAULT_ARROWS_BW   1
@@ -54,6 +57,8 @@ public:
     void ChangeGameState(GameState newState);
     void FadeToGameState(GameState state);
 
+	void PollInput();
+
 protected:
     GameState gameState;
     double timer;
@@ -65,6 +70,10 @@ protected:
 
     // Arena variables
     int arenaStarted;
+
+	// input polling
+	uint8_t currInput;
+	uint8_t prevInput;
 };
 
 /////// Inherited GOM ////////
@@ -77,8 +86,8 @@ public:
 
 /////// Objects Classes ////////
 #define ARROW_TARGET_Y  64
-#define ARROW_SPEED     -200
-#define FlightTime      ((600.0 - ARROW_TARGET_Y) / (-ARROW_SPEED))
+#define ARROW_SPEED     200
+#define FlightTime      ((600.0 - ARROW_TARGET_Y) / (ARROW_SPEED))
 
 class GODefaultArrow : public BL_GameObject
 {

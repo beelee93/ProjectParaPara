@@ -173,7 +173,7 @@ BL_GameObject** BL_GOM::FindObjectsOfType(int type, SDL_Rect* searchArea)
             tempRect[0] = obj->sprite->GetRect(obj->imageIndex);
             tempRect[0].x = obj->x;
             tempRect[0].y = obj->y;
-            SDL_bool a;
+
             if( !SDL_IntersectRect(tempRect, searchArea, tempRect+1) )
                 continue;
         }

@@ -28,6 +28,7 @@ QueueNode* BL_RenderQueue::CreateNode()
     QueueNode* node = (QueueNode*)malloc(sizeof(QueueNode));
     node->next = NULL;
     node->item = NULL;
+	return node;
 }
 
 void BL_RenderQueue::QueueObject(BL_GameObject* obj)

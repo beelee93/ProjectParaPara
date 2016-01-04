@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "Globals.h"
 
+#undef main
+
 // Global sprite list
 static BL_SpriteList* sprites;
 

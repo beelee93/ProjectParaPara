@@ -47,8 +47,6 @@ static void strtrim(char* str)
 // be sure to free definitions
 BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
 {
-    SDL_Rect tempRect;
-
     int count = 0;
     int lineNumber = 1;
     char line[512];
