@@ -20,9 +20,7 @@
 #include "GameObjectManager.h"
 #include "Game.h"
 #include "SpriteLoader.h"
-#include "irrKlang.h"
 #include "SDL_FontCache.h"
-#include "Audio.h"
 
 /////// Constants ////////
 enum GameState {

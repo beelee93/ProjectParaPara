@@ -12,15 +12,10 @@
 #define SYSFONT "/usr/share/fonts/truetype/freefont/FreeMono.ttf"
 #endif
 
-// sound control
-using namespace irrklang;
-static BL_Audio* audio = NULL;
-
 static BL_GOM* gom = NULL;
 static FC_Font* statusFont = NULL;
 
 static double timer = 0;
-static ISound* music = NULL;
 
 // Test data for arrows
 typedef struct __data {
@@ -51,18 +46,6 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 
     ChangeGameState(GS_Splash);
 
-    // initialise audio system
-    audio = new BL_Audio();
-    if(!audio)
-    {
-        this->initialised = 0;
-        BL_EHLog("GameParaPara(): Failed to create audio controller.\n");
-        return;
-    }
-
-    // load audio
-    audio->AddAudio("res/Yesterday.mp3", 1);
-
     // create fonts
     statusFont = FC_CreateFont();
 
@@ -83,9 +66,6 @@ GameParaPara::~GameParaPara()
 {
     // free GOM
     if(gom) delete gom;
-
-    // free audio
-    if(audio) delete audio;
 
     // free fonts
     if(statusFont) FC_FreeFont(statusFont);
@@ -123,7 +103,6 @@ void GameParaPara::OnUpdate(double secs)
                 arenaStarted = 1;
 
                 // play arena song
-                music = audio->PlayAudio(0, 0);
                 timer = 0;
                 dataIndex = 0;
 
@@ -266,7 +245,7 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
 
     default:
         SDL_SetRenderDrawColor(renderer,0x64,0x95,0xED,255);
-        SDL_RenderClear(renderer);
+		SDL_RenderClear(renderer);
         if(objManager) objManager->Render(secs);
         break;
     }
@@ -366,20 +345,9 @@ void GameParaPara::OnExitState(GameState leavingState)
     switch(leavingState)
     {
     case GS_Arena:
-        if(music)
-        {
-            music->stop();
-            music->drop();
-            music = NULL;
-        }
+
         break;
     case GS_Editor:
-        if(music)
-        {
-            music->stop();
-            music->drop();
-            music = NULL;
-        }
         dataCount = dataIndex;
         break;
     }
@@ -406,7 +374,6 @@ void GameParaPara::OnEnterState(GameState newState)
     case GS_Editor:
         timer=0.0;
         dataIndex=0;
-        music = audio->PlayAudio(0,0);
 		prevInput = currInput = 0;
         break;
     }

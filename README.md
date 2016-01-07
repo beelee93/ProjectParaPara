@@ -9,8 +9,7 @@ in arcades using Raspberry Pi.
 
 1. SDL2             - main rendering
 2. SDL2_Image       - loading png images
-3. irrklang         - for audio
-4. SDL_FontCache    - For optimised text rendering
+3. SDL_FontCache    - For optimised text rendering
 
 ---
 

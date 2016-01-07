@@ -1,22 +1,17 @@
 OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameObjectManager.o Sprite.o SpriteLoader.o \
 	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
-	   GOStationaryArrow.o Main.o SDL_FontCache.o Audio.o \
+	   GOStationaryArrow.o Main.o SDL_FontCache.o \
 	   RenderQueue.o GOPinkFlash.o
 
 GOH = Globals.h GameObject.h
 
-LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lIrrKlang
-DIRS = -I/usr/include/SDL2 -I/usr/local/include/SDL2 -I./include -Llib
-CFLAGS = -c $(DIRS)
+LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf
+CFLAGS = -c
 CC = g++
 
 install : $(OBJS)
 	$(CC) $(OBJS) $(DIRS) $(LIBS) -o para
-	echo "Copying libraries to /usr/local/lib"
-	cp -f lib/* /usr/local/lib
-	echo "Running ldconfig to register libraries"
-	ldconfig
 	rm -rf *.o
 
 ErrorHandler.o : ErrorHandler.h ErrorHandler.cpp
@@ -40,9 +35,6 @@ GameObjectManager.o : GameObjectManager.h \
 
 SpriteLoader.o : SpriteLoader.h Sprite.h ErrorHandler.h SpriteLoader.cpp
 	$(CC) $(CFLAGS) $(LIBS) SpriteLoader.cpp
-
-Audio.o : ErrorHandler.h Audio.cpp
-	$(CC) $(CFLAGS) $(LIBS) Audio.cpp
 
 RenderQueue.o : RenderQueue.h GameObject.h RenderQueue.cpp
 	$(CC) $(CFLAGS) $(LIBS) RenderQueue.cpp
@@ -71,11 +63,3 @@ Main.o : Game.h Globals.h Main.cpp
 clean :
 	rm -rf *.o
 
-uninstall :
-	echo "Removing libraries from /usr/local/lib"
-	rm -rf /usr/local/lib/ikpMP3.so
-	rm -rf /usr/local/lib/ikpFlac.so
-	rm -rf /usr/local/lib/libIrrKlang.so
-	rm -rf para
-	ldconfig
-	echo "Done"

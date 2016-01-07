@@ -171,7 +171,7 @@ int BL_Game::InitWindow(int fullscreen)
          return 0;
     }
 
-    mainWindow = SDL_CreateWindow(WINDOW_TITLE, 0,0,
+    mainWindow = SDL_CreateWindow(WINDOW_TITLE, 45,45,
         windowWidth, windowHeight, SDL_WINDOW_SHOWN);
     if(!mainWindow)
     {
