@@ -17,21 +17,27 @@
 #define OBJ_SHOCKWAVE           2
 #define OBJ_PINK_FLASH          9000
 
+
 #include "GameObjectManager.h"
 #include "Game.h"
 #include "SpriteLoader.h"
 #include "SDL_FontCache.h"
 
+#include "GameParaPara.h"
+
+#if !defined(WIN32)
+#include <bcm2835.h>
+#define PIN_A	RPI_V2_GPIO_P1_07
+#define PIN_B	RPI_V2_GPIO_P1_11
+#define PIN_C	RPI_V2_GPIO_P1_13
+#define PIN_D	RPI_V2_GPIO_P1_15
+#define PIN_E	RPI_V2_GPIO_P1_16
+#endif 
+
+//#include "bcm2835.h"
+
+
 /////// Constants ////////
-enum GameState {
-    GS_Null,                /* Used by fadeTarget */
-    GS_Splash,              /* Splash screen */
-    GS_MainMenu,            /* Press a button to begin */
-    GS_SongSelection,       /* Menu to select songs */
-    GS_Arena,               /* Main playing screen */
-    GS_Scoreboard,          /* Results and score */
-    GS_Editor               /* Allows the creation of new rhythms */
-};
 
 #define FM_FADE_OUT -1
 #define FM_FADE_IN 1
@@ -40,39 +46,6 @@ enum GameState {
 
 /////// Global Functions ////////
 BL_SpriteList* GetSpriteList();
-
-/////// Inherited Game ////////
-class GameParaPara : public BL_Game
-{
-public:
-    GameParaPara(int, char**);
-    ~GameParaPara();
-    void OnUpdate(double secs);
-    void OnEvent(SDL_Event* event, double secs);
-    void OnRender(SDL_Renderer* renderer, double secs);
-    void OnExitState(GameState leavingState);
-    void OnEnterState(GameState newState);
-    void ChangeGameState(GameState newState);
-    void FadeToGameState(GameState state);
-
-	void PollInput();
-
-protected:
-    GameState gameState;
-    double timer;
-
-    // Transition fade mechanism
-    double fadeTimer;
-    int fadeMode;
-    GameState fadeTarget;
-
-    // Arena variables
-    int arenaStarted;
-
-	// input polling
-	uint8_t currInput;
-	uint8_t prevInput;
-};
 
 /////// Inherited GOM ////////
 class GOMParaPara : public BL_GOM
@@ -94,8 +67,12 @@ public:
     void OnInit(int id, int type, void* data=NULL);
     void OnUpdate(double secs);
     void Disappear();
+	int HasInput();
+	void SetInput();
 private:
     int disappearing;
+	int xs, ys;
+	int hasInput;
 };
 
 class GOPinkFlash : public BL_GameObject
@@ -134,5 +111,6 @@ public:
 private:
     int firstUpdate;
     double xstart, ystart;
+	float scaler;
 };
 #endif // RESOURCE_H_INCLUDED

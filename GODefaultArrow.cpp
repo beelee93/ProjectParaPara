@@ -10,6 +10,7 @@ GODefaultArrow::GODefaultArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS) { }
 
 void GODefaultArrow::OnInit(int id, int type, void* data)
 {
+	hasInput = 0;
     disappearing = 0;
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS);
     imageSpeed=0;
@@ -30,16 +31,18 @@ void GODefaultArrow::OnUpdate(double secs)
     {
         disappearing = 1 ;
         y=ARROW_TARGET_Y;
+		xs = x;
+		ys = y;
         vy=0;
     }
 
     if(disappearing)
     {
-        alpha -= 5.0*secs;
-        imageScaleX += 2*secs;
-        imageScaleY += 2*secs;
-        x-=2*secs * 32;
-        y-=2*secs * 32;
+        alpha -= 10.0*secs;
+        imageScaleX += 9*secs;
+        imageScaleY += 9*secs;
+		x = (int)(xs + 32 - imageScaleX * 32);
+		y = (int)(ys + 32 - imageScaleY * 32);
 
         if(alpha<=0)
         {
@@ -49,8 +52,21 @@ void GODefaultArrow::OnUpdate(double secs)
     }
 }
 
+void GODefaultArrow::SetInput()
+{
+	hasInput = 1;
+	Disappear();
+}
+
+int GODefaultArrow::HasInput()
+{
+	return hasInput;
+}
+
 void GODefaultArrow::Disappear()
 {
     disappearing = 1;
     vy = 0;
+	xs = x;
+	ys = y;
 }

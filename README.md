@@ -7,9 +7,13 @@ in arcades using Raspberry Pi.
 
 #Required Libraries
 
-1. SDL2             - main rendering
-2. SDL2_Image       - loading png images
-3. SDL_FontCache    - For optimised text rendering
+|   |Library            |Description                     |
+|---|-------------------|--------------------------------|
+|1  |SDL2               |Main rendering                  |
+|2  |SDL2_Image         |Loading png images              |
+|3  |SDL2_TTF           |Font rendering support          |
+|4  |SDL2_Mixer         |Audio                           |
+|5  |SDL_FontCache      |Optimised text rendering        |
 
 ---
 
@@ -29,6 +33,11 @@ and render cycles.
 
 Inherited by:
 * GameParaPara
+
+###Audio.cpp
+
+Implements a wrapper around SDL_mixer to simplify 
+its usage within the game
 
 ###Sprite.cpp
 

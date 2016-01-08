@@ -25,10 +25,10 @@ BL_GOM::BL_GOM()
 // Free the GOM
 BL_GOM::~BL_GOM()
 {
-    delete renderQueue;
-
-    // destroy and free all objects
+	// destroy and free all objects
     DestroyAllObjects();
+
+	delete renderQueue;
 
     // now free the list
     free( objects );

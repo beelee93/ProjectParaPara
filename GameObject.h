@@ -50,7 +50,7 @@ public:
                             // can be NULL for no sprite
 
     BL_GameObject(int type);
-    ~BL_GameObject();
+    virtual ~BL_GameObject();
 
     // Be sure to call parent's functions
     virtual void OnInit(int id, int type, void* data=NULL);  // you may set your sprite here

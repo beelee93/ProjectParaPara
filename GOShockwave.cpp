@@ -7,10 +7,13 @@
 
 GOShockwave::GOShockwave() : BL_GameObject(OBJ_SHOCKWAVE) { }
 
+// create this object at a position which will be the centre of the shockwave
 void GOShockwave::OnInit(int id, int type, void* data)
 {
     this->sprite = GetSpriteList()->GetSprite(OBJ_SHOCKWAVE);
     firstUpdate = 1;
+	imageScaleX = imageScaleY = 0.1;
+	scaler = 5;
     alpha = 0;
 }
 
@@ -24,11 +27,12 @@ void GOShockwave::OnUpdate(double secs)
         alpha = 1;
     }
 
-    imageScaleX += 3*secs;
-    imageScaleY += 3*secs;
+    imageScaleX += scaler*secs;
+    imageScaleY += scaler*secs;
+	scaler *= SDL_pow(2.0, -secs);
 
-    x=xstart + 32 - (imageScaleX*32);
-    y=ystart + 32 - (imageScaleX*32);
+    x=xstart - (imageScaleX*128);
+    y=ystart - (imageScaleX*128);
 
     alpha-=2*secs;
     if(alpha<=0)

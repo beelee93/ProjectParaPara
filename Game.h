@@ -12,6 +12,7 @@
 #include "GameObject.h"
 #include "GameObjectManager.h"
 #include "SpriteLoader.h"
+#include "Audio.h"
 
 #include <string.h>
 #include <stddef.h>
@@ -39,7 +40,7 @@ class BL_Game
 {
 public:
     BL_Game(int argc, char** argv);
-    ~BL_Game();
+    virtual ~BL_Game();
 
     void MainLoop();
 
@@ -55,10 +56,13 @@ public:
     int GetInitialised();
     void SetObjectManager(BL_GOM* gom);
 
+	BL_Audio* GetAudio();
+
 protected:
     SDL_Renderer* mainRenderer;
     SDL_Window* mainWindow;
     BL_GOM* objManager;
+	BL_Audio* audio;
 
     int initialised;
     int isFullscreen;

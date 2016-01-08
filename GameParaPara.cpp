@@ -40,6 +40,16 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeTarget = GS_Null;
 	currInput = prevInput = 0;
 
+#if !defined(WIN32)
+	// initialise bcm library
+	if(!bcm2835_init())
+	{
+		this->initialised = 0;
+		BL_EHLog("GameParaPara(): Failed to initialise BCM2835 library.\n");
+		return;
+	}
+#endif
+	
     // initialise gom
     gom = new GOMParaPara();
     this->SetObjectManager(gom);
@@ -59,6 +69,27 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     // use a system installed font
     FC_LoadFont(statusFont, mainRenderer, SYSFONT,
          16, FC_MakeColor(255,255,255,255), TTF_STYLE_NORMAL);
+
+	if (initialised)
+	{
+		// TODO: Make a script parser that loads song names
+		songNames = (char**)calloc(2, sizeof(char*));
+		songNames[0] = (char*)calloc(60, sizeof(char));
+		songNames[1] = (char*)calloc(60, sizeof(char));
+		songCount = 2;
+		sprintf(songNames[0], "res/Yesterday.mp3");
+		sprintf(songNames[1], "res/IntoYourHeart.mp3");
+
+		// load up sounds and music
+		audio->AddMusic(songNames[0]);
+		audio->AddMusic(songNames[1]);
+	}
+
+	// DEMO purpose:
+	FILE *file = fopen("song.data", "rb");
+	fread(&dataCount, sizeof(int), 1, file);
+	fread(data, sizeof(Data), dataCount, file);
+	fclose(file);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -69,6 +100,14 @@ GameParaPara::~GameParaPara()
 
     // free fonts
     if(statusFont) FC_FreeFont(statusFont);
+
+	// free all song names
+	for (int i = 0; i < songCount; i++)
+	{
+		free(songNames[i]);
+		songNames[i] = NULL;
+	}
+	free(songNames);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -77,132 +116,24 @@ void GameParaPara::OnUpdate(double secs)
     BL_Game::OnUpdate(secs);
 	uint8_t riseKey = 0, fallKey = 0;
 	SDL_Rect tempRect = {0};
-    BL_GameObject* tempObj;
 
-    switch(gameState)
-    {
-    //////////// UPDATE FOR SPLASHSCREEN ////////////
-    case GS_Splash:
-        timer -= secs;
-        if(timer<=0)
-        {
-            gameState = GS_MainMenu;
-            timer = 0;
-        }
-        break;
+	switch (gameState)
+	{
+		//////////// UPDATE FOR SPLASHSCREEN ////////////
+	case GS_Splash:
+		timer -= secs;
+		if (timer <= 0)
+		{
+			gameState = GS_MainMenu;
+			timer = 0;
+		}
+		break;
 
-    //////////// UPDATE FOR ARENA ////////////
-    case GS_Arena:
-        int tempArenaX, tempArenaY;
-        if(!arenaStarted)
-        {
-            // Preparations
-            timer -= secs;
-            if(timer<=0)
-            {
-                arenaStarted = 1;
-
-                // play arena song
-                timer = 0;
-                dataIndex = 0;
-
-                for(tempArenaX=0;tempArenaX<5;tempArenaX++)
-                {
-                    bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
-                                            OBJ_DEFAULT_ARROWS_BW, &tempArenaX);
-                    tempObj = objManager->CreateObject(OBJ_PINK_FLASH, &tempArenaX);
-                    bwArrows[tempArenaX]->SetAttachedFlash((GOPinkFlash*)tempObj);
-                }
-
-            }
-        }
-        else
-        {
-            // Playing time!
-            timer+=secs;
-
-            while(timer>=(data[dataIndex].timestamp - FlightTime) && dataIndex < dataCount)
-            {
-                for(tempArenaX = 0;tempArenaX<5;tempArenaX++)
-                {
-                    if(data[dataIndex].arrow & (0x1 << (tempArenaX*2)))
-                    {
-                        objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaX);
-                    }
-                }
-                dataIndex++;
-            }
-
-			// Poll input
-			PollInput();
-			riseKey = ~prevInput & currInput; // look for rising edge
-			fallKey = prevInput & ~currInput; // look for falling edge
-
-			// look for flying arrows
-			tempRect.x = 208;
-			tempRect.y = 90;
-			tempRect.w = 384;
-			tempRect.h = 2;
-			BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
-				OBJ_DEFAULT_ARROWS, &tempRect);
-			
-			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++) // loop through each arrow
-			{
-				if (currInput & (1 << tempArenaX))
-				{
-					// we flash the corresponding arrow
-					bwArrows[tempArenaX]->Flash();
-				}
-
-				// is it a rising or falling edge?
-				if (riseKey)
-				{
-					// we look for singular arrows and beginning of arrow chain
-					// loop through all flying arrows detected
-					for (tempArenaY = 0; nearObjs[tempArenaY] != NULL; tempArenaY++)
-					{
-						tempObj = nearObjs[tempArenaY];
-						if (tempArenaX == tempObj->imageIndex && tempObj->alpha > 0.9)
-						{
-							accuracy += 1 - (
-								(tempObj->y >64 ? tempObj->y : 64) - 64) / 64.0;
-							// make it disappear
-							((GODefaultArrow*)tempObj)->Disappear();
-						}
-					}
-				}
-				else if (fallKey)
-				{
-					// we look for end of arrow chain
-				}		
-			}
-        }
-        break;
-
-    //////////// UPDATE FOR EDITOR ////////////
-    case GS_Editor:
-        timer+=secs;
-
-        // get current keys
-		PollInput();
-
-		riseKey = ~prevInput & currInput;
-		fallKey = prevInput & ~currInput;
-
-        if( riseKey ) // check for rising edge
-        {
-            data[dataIndex].timestamp = timer - 0.1;
-			data[dataIndex].arrow = (riseKey & 0x1) |
-				((riseKey & 0x2) << 1) |
-				((riseKey & 0x4) << 2) |
-				((riseKey & 0x8) << 3) |
-				((riseKey & 0x10) << 4);
-            dataIndex++;
-        }
-
-        if(dataIndex>1023) dataIndex=1023;
-        break;
-    }
+		//////////// UPDATE FOR ARENA ////////////
+	case GS_Arena:
+		UpdateArena(secs);
+		break;
+	}
 
     // Transitional fade mechanism
     if(fadeMode)
@@ -320,18 +251,6 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                     FadeToGameState(/*GS_SongSelection*/ GS_Arena);
                 }
                 break;
-            case SDLK_F10:
-                if(gameState == GS_MainMenu)
-                {
-                    // Transition to editor
-                    FadeToGameState(GS_Editor);
-                }
-                else if(gameState == GS_Editor)
-                {
-                    // Transition back to Main menu
-                    FadeToGameState(GS_MainMenu);
-                }
-                break;
             }
             break;
      }
@@ -345,10 +264,7 @@ void GameParaPara::OnExitState(GameState leavingState)
     switch(leavingState)
     {
     case GS_Arena:
-
-        break;
-    case GS_Editor:
-        dataCount = dataIndex;
+		audio->StopMusic();
         break;
     }
 
@@ -368,12 +284,7 @@ void GameParaPara::OnEnterState(GameState newState)
         break;
     case GS_Arena:
         timer = 2.0;
-        arenaStarted = 0;
-		prevInput = currInput = 0;
-        break;
-    case GS_Editor:
-        timer=0.0;
-        dataIndex=0;
+        Arena.arenaStarted = 0;
 		prevInput = currInput = 0;
         break;
     }
@@ -396,4 +307,116 @@ void GameParaPara::FadeToGameState(GameState state)
         fadeMode = FM_FADE_OUT; // fade out
         fadeTarget = state;
     }
+}
+
+///////////////////////////////////////////////////////////////////
+// UPDATE FUNCTIONS
+///////////////////////////////////////////////////////////////////
+
+void GameParaPara::UpdateArena(double secs)
+{
+	int tempArenaX, tempArenaY;
+	BL_GameObject* tempObj;
+	GODefaultArrow* tempArrow;
+
+	SDL_Rect tempRect;
+	uint8_t riseKey, fallKey;
+
+	if (!Arena.arenaStarted)
+	{
+		// Preparations
+		timer -= secs;
+		if (timer <= 0)
+		{
+			Arena.arenaStarted = 1;
+
+			// play arena song
+			audio->PlayMusic(0);
+			timer = 0;
+			dataIndex = 0;
+
+			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
+			{
+				bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
+					OBJ_DEFAULT_ARROWS_BW, &tempArenaX);
+				tempObj = objManager->CreateObject(OBJ_PINK_FLASH, &tempArenaX);
+				bwArrows[tempArenaX]->SetAttachedFlash((GOPinkFlash*)tempObj);
+			}
+
+		}
+	}
+	else
+	{
+		// Playing time!
+		timer += secs;
+
+		while (timer >= (data[dataIndex].timestamp - FlightTime) && dataIndex < dataCount)
+		{
+			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
+			{
+				if (data[dataIndex].arrow & (0x1 << (tempArenaX * 2)))
+				{
+					objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaX);
+				}
+			}
+			dataIndex++;
+		}
+
+		// Poll input
+		PollInput();
+		riseKey = ~prevInput & currInput; // look for rising edge
+		fallKey = prevInput & ~currInput; // look for falling edge
+
+		// look for flying arrows
+		tempRect.x = 208;
+		tempRect.y = 90;
+		tempRect.w = 384;
+		tempRect.h = 2;
+		BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
+			OBJ_DEFAULT_ARROWS, &tempRect);
+
+		for (tempArenaX = 0; tempArenaX < 5; tempArenaX++) // loop through each column
+		{
+			if (currInput & (1 << tempArenaX))
+			{
+				// we flash the corresponding arrow
+				bwArrows[tempArenaX]->Flash();
+			}
+
+			// is it a rising or falling edge?
+			if (riseKey)
+			{
+				// we look for singular arrows and beginning of arrow chain
+				// loop through all flying arrows detected
+				for (tempArenaY = 0; nearObjs[tempArenaY] != NULL; tempArenaY++)
+				{
+					// is riseKey for the correct column?
+					if ((riseKey &  (1 << tempArenaX)) == 0) continue;
+
+					tempArrow = (GODefaultArrow*)nearObjs[tempArenaY];
+					if (tempArenaX == tempArrow->imageIndex &&		/* select arrows in the column */
+						tempArrow->alpha > 0.2 &&					/* give some allowance */
+						!tempArrow->HasInput())						/* has arrow been activated? */
+					{
+						accuracy += 1 - (
+							(tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0;
+						accuracy /= 2;
+
+						// make it disappear
+						tempArrow->y = bwArrows[tempArenaX]->y;
+						tempArrow->SetInput();
+
+						// create a shockwave at arrow
+						tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
+						tempObj->x = bwArrows[tempArenaX]->x + 32;
+						tempObj->y = bwArrows[tempArenaX]->y + 32;
+					}
+				}
+			}
+			else if (fallKey)
+			{
+				// we look for end of arrow chain
+			}
+		}
+	}
 }

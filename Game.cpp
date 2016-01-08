@@ -16,6 +16,7 @@ BL_Game::BL_Game(int argc, char** argv)
     objManager = NULL;
     mainWindow = NULL;
     mainRenderer = NULL;
+	audio = NULL;
 
     // Process cmd line
     ProcessCmdLine(argc, argv);
@@ -59,6 +60,14 @@ BL_Game::BL_Game(int argc, char** argv)
         goto err;
     }
 
+	// Initialise audio
+	audio = new BL_Audio();
+	if (!audio || !audio->GetInitialised())
+	{
+		BL_EHLog("InitGame(): Could not initialise audio system.\n");
+		goto err;
+	}
+
     // Set clock
     prevClock = SDL_GetTicks();
 
@@ -77,6 +86,8 @@ BL_Game::~BL_Game()
         SDL_DestroyRenderer(mainRenderer);
     if(mainWindow)
         SDL_DestroyWindow(mainWindow);
+	if (audio)
+		delete audio;
 
     // Free libraries
     if(initFlags & BL_IF_TTF)
@@ -228,6 +239,11 @@ void BL_Game::ProcessCmdLine(int argc, char** argv)
         if(strcmp(argv[i], "--fullscreen")==0)
             isFullscreen = SDL_WINDOW_FULLSCREEN;
     }
+}
+
+BL_Audio* BL_Game::GetAudio()
+{
+	return audio;
 }
 
 SDL_Renderer* BL_Game::GetMainRenderer()

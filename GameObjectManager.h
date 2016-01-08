@@ -22,7 +22,7 @@ class BL_GOM
 {
 public:
     BL_GOM();
-    ~BL_GOM();
+    virtual ~BL_GOM();
 
     // Creates an object of specified type with its default
     // settings, and returns a pointer to it

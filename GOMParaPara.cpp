@@ -17,6 +17,9 @@ BL_GameObject* GOMParaPara::OnCreateObject(int type)
         case OBJ_DEFAULT_ARROWS_BW:
             return new GOStationaryArrow();
 
+		case OBJ_SHOCKWAVE:
+			return new GOShockwave();
+
         case OBJ_PINK_FLASH:
             return new GOPinkFlash();
 
