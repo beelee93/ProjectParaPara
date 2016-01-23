@@ -17,15 +17,6 @@ static FC_Font* statusFont = NULL;
 
 static double timer = 0;
 
-// Test data for arrows
-typedef struct __data {
-    double timestamp;
-    uint16_t arrow;
-} Data;
-
-Data data[1024]= {0};
-static int dataIndex = 0;
-static int dataCount = 0;
 static uint16_t prevKeys = 0;
 static double accuracy = 1;
 static GOStationaryArrow* bwArrows[5];
@@ -39,16 +30,6 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeMode = 0;
     fadeTarget = GS_Null;
 	currInput = prevInput = 0;
-
-#if !defined(WIN32)
-	// initialise bcm library
-	if(!bcm2835_init())
-	{
-		this->initialised = 0;
-		BL_EHLog("GameParaPara(): Failed to initialise BCM2835 library.\n");
-		return;
-	}
-#endif
 	
     // initialise gom
     gom = new GOMParaPara();
@@ -85,11 +66,11 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 		audio->AddMusic(songNames[1]);
 	}
 
-	// DEMO purpose:
-	FILE *file = fopen("song.data", "rb");
-	fread(&dataCount, sizeof(int), 1, file);
-	fread(data, sizeof(Data), dataCount, file);
-	fclose(file);
+	// create arrow list
+	Arena.arrowList = new ArrowList();
+
+	// TEST: A random arrow list
+	
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -108,6 +89,11 @@ GameParaPara::~GameParaPara()
 		songNames[i] = NULL;
 	}
 	free(songNames);
+
+	// free arrow list
+	if(Arena.arrowList)
+		delete Arena.arrowList;
+	Arena.arrowList = NULL;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -318,9 +304,10 @@ void GameParaPara::UpdateArena(double secs)
 	int tempArenaX, tempArenaY;
 	BL_GameObject* tempObj;
 	GODefaultArrow* tempArrow;
+	ArrowListNode* curNode;
 
 	SDL_Rect tempRect;
-	uint8_t riseKey, fallKey;
+	uint8_t riseKey;
 
 	if (!Arena.arenaStarted)
 	{
@@ -333,8 +320,11 @@ void GameParaPara::UpdateArena(double secs)
 			// play arena song
 			audio->PlayMusic(0);
 			timer = 0;
-			dataIndex = 0;
+			
+			// reset arrow list node pointer
+			Arena.arrowList->ResetCurrentNode();
 
+			// create the stationary arrows
 			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
 			{
 				bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
@@ -342,7 +332,6 @@ void GameParaPara::UpdateArena(double secs)
 				tempObj = objManager->CreateObject(OBJ_PINK_FLASH, &tempArenaX);
 				bwArrows[tempArenaX]->SetAttachedFlash((GOPinkFlash*)tempObj);
 			}
-
 		}
 	}
 	else
@@ -350,22 +339,24 @@ void GameParaPara::UpdateArena(double secs)
 		// Playing time!
 		timer += secs;
 
-		while (timer >= (data[dataIndex].timestamp - FlightTime) && dataIndex < dataCount)
+		while(Arena.arrowList->GetCurrentNode() /* make sure current node is not NULL */&&
+			timer >= (Arena.arrowList->GetCurrentNode()->timeStamp - FlightTime) /* timing */)
 		{
+			curNode = Arena.arrowList->GetCurrentNode();
 			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
 			{
-				if (data[dataIndex].arrow & (0x1 << (tempArenaX * 2)))
+				if (ArrowIsEnabled(&(curNode->arrows[tempArenaX])))
 				{
 					objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaX);
+					// TODO: Adjust starting y position based on timer - timeStamp difference
 				}
 			}
-			dataIndex++;
+			Arena.arrowList->NextNode();
 		}
 
 		// Poll input
 		PollInput();
 		riseKey = ~prevInput & currInput; // look for rising edge
-		fallKey = prevInput & ~currInput; // look for falling edge
 
 		// look for flying arrows
 		tempRect.x = 208;
@@ -413,10 +404,8 @@ void GameParaPara::UpdateArena(double secs)
 					}
 				}
 			}
-			else if (fallKey)
-			{
-				// we look for end of arrow chain
-			}
+			
+			// TODO: Implement check for chain delays
 		}
 	}
 }

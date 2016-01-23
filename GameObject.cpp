@@ -52,7 +52,7 @@ void BL_GameObject::OnInit(int id, int type, void* data)
     depth = 0;
 }
 
-void BL_GameObject::OnRender(double secs)
+void BL_GameObject::OnRender(double secs, SDL_Renderer* renderer)
 {
     if(!visible || destroyFlag) return;
 

@@ -31,7 +31,7 @@ public:
     void Purge();
 
     // Dequeues the active queue for rendering
-    void Render(double secs);
+    void Render(double secs, SDL_Renderer* renderer);
 
     // Queues an object for rendering based on its depth
     void QueueObject(BL_GameObject* obj);

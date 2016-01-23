@@ -25,18 +25,6 @@
 
 #include "GameParaPara.h"
 
-#if !defined(WIN32)
-#include <bcm2835.h>
-#define PIN_A	RPI_V2_GPIO_P1_07
-#define PIN_B	RPI_V2_GPIO_P1_11
-#define PIN_C	RPI_V2_GPIO_P1_13
-#define PIN_D	RPI_V2_GPIO_P1_15
-#define PIN_E	RPI_V2_GPIO_P1_16
-#endif 
-
-//#include "bcm2835.h"
-
-
 /////// Constants ////////
 
 #define FM_FADE_OUT -1
@@ -60,19 +48,29 @@ public:
 #define ARROW_SPEED     200
 #define FlightTime      ((600.0 - ARROW_TARGET_Y) / (ARROW_SPEED))
 
+#define HIBITS(x) ( x>>4 )
+#define LOBITS(x) ( x & (0x0F) )
+
+typedef struct {
+	char flags;		// HI-bits - arrow index; LO-bits - chained?
+	float chainDelay;
+} GODefaultArrowData;
+
 class GODefaultArrow : public BL_GameObject
 {
 public:
     GODefaultArrow();
     void OnInit(int id, int type, void* data=NULL);
     void OnUpdate(double secs);
+	void OnRender(double secs, SDL_Renderer *renderer); 
     void Disappear();
 	int HasInput();
 	void SetInput();
 private:
-    int disappearing;
-	int xs, ys;
-	int hasInput;
+    int disappearing; // is the arrow disappearing?
+	GODefaultArrowData attachedData;
+	int xs, ys;		  // (x,y) upon invoking Disappear
+	int hasInput;	  // has already validated a user input
 };
 
 class GOPinkFlash : public BL_GameObject

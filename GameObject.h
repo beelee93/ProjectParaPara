@@ -54,7 +54,7 @@ public:
 
     // Be sure to call parent's functions
     virtual void OnInit(int id, int type, void* data=NULL);  // you may set your sprite here
-    virtual void OnRender(double secs);
+    virtual void OnRender(double secs, SDL_Renderer* renderer);
     virtual void OnUpdate(double secs);
 
     void SignalDestroy();

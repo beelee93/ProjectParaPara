@@ -92,7 +92,7 @@ void BL_RenderQueue::QueueObject(BL_GameObject* obj)
     }
 }
 
-void BL_RenderQueue::Render(double secs)
+void BL_RenderQueue::Render(double secs, SDL_Renderer* renderer)
 {
     if(!queueHeads[ACTIVE]) return; // nothing to render
     QueueNode* node = queueHeads[ACTIVE];
@@ -100,7 +100,7 @@ void BL_RenderQueue::Render(double secs)
     // traverse down and render
     while(node)
     {
-        node->item->OnRender(secs);
+        node->item->OnRender(secs, renderer);
 
         // dequeue
         queueHeads[ACTIVE] = node->next;

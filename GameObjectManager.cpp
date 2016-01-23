@@ -154,7 +154,7 @@ void BL_GOM::Update(double secs)
 // Renders all active objects in the list
 void BL_GOM::Render(double secs)
 {
-    renderQueue->Render(secs);
+    renderQueue->Render(secs, mainRenderer);
 }
 
 BL_GameObject** BL_GOM::FindObjectsOfType(int type, SDL_Rect* searchArea)

@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "ArrowList.h"
 
 enum GameState {
 	GS_Null,                /* Used by fadeTarget */
@@ -40,6 +41,7 @@ protected:
 	// Arena variables
 	struct {
 		int arenaStarted;
+		ArrowList* arrowList;
 	} Arena;
 
 	// Song names

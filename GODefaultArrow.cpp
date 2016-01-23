@@ -14,10 +14,15 @@ void GODefaultArrow::OnInit(int id, int type, void* data)
     disappearing = 0;
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS);
     imageSpeed=0;
-    if(!data)
-        imageIndex = rand() % 5;
-    else
-        imageIndex = *((int*)data);
+	
+	// Zero out the data
+	SDL_memset(&this->attachedData, 0, sizeof(GODefaultArrowData));
+
+	if (!data)
+		this->attachedData = *((GODefaultArrowData*)(data));
+	
+	imageIndex = HIBITS(attachedData.flags);
+
     x = 208 + 80*imageIndex;
     y = 600;
     vy= -ARROW_SPEED;
@@ -51,6 +56,12 @@ void GODefaultArrow::OnUpdate(double secs)
         }
     }
 }
+
+void GODefaultArrow::OnRender(double secs, SDL_Renderer* renderer)
+{
+	BL_GameObject::OnRender(secs, renderer);
+}
+
 
 void GODefaultArrow::SetInput()
 {
