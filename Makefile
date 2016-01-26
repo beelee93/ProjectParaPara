@@ -3,7 +3,7 @@ OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
 	   GOStationaryArrow.o Main.o SDL_FontCache.o \
 	   RenderQueue.o GOPinkFlash.o Audio.o \
-	   GOShockwave.o
+	   GOShockwave.o ArrowList.o
 
 GOH = Globals.h GameObject.h
 
@@ -43,6 +43,9 @@ RenderQueue.o : RenderQueue.h GameObject.h RenderQueue.cpp
 Audio.o : Audio.h Audio.cpp
 	$(CC) $(CFLAGS) $(LIBS) Audio.cpp
 
+ArrowList.o : ArrowList.h ArrowList.cpp
+	$(CC) $(CFLAGS) ArrowList.cpp
+
 SDL_FontCache.o : SDL_FontCache.h SDL_FontCache.c
 	$(CC) $(CFLAGS) $(LIBS) SDL_FontCache.c
 
@@ -50,22 +53,22 @@ GOMParaPara.o : Globals.h GameObjectManager.h GOMParaPara.cpp
 	$(CC) $(CFLAGS) $(LIBS) GOMParaPara.cpp
 
 GODefaultArrow.o : $(GOH) GODefaultArrow.cpp
-	$(CC)  $(CFLAGS) $(LIBS) GODefaultArrow.cpp
+	$(CC) $(CFLAGS) $(LIBS) GODefaultArrow.cpp
 
 GOShockwave.o : $(GOH) GOShockwave.cpp
-	$(CC)  $(CFLAGS) $(LIBS) GOShockwave.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOShockwave.cpp
 
 GOStationaryArrow.o : $(GOH) GOStationaryArrow.cpp
-	$(CC)  $(CFLAGS) $(LIBS) GOStationaryArrow.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOStationaryArrow.cpp
 
 GOPinkFlash.o : $(GOH) GOPinkFlash.cpp
-	$(CC)  $(CFLAGS) $(LIBS) GOPinkFlash.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOPinkFlash.cpp
 
 GameParaPara.o : Game.h Globals.h GameParaPara.h GameParaPara.cpp
-	$(CC)  $(CFLAGS) $(LIBS) GameParaPara.cpp
+	$(CC) $(CFLAGS) $(LIBS) GameParaPara.cpp
 
 Main.o : Game.h Globals.h Main.cpp
-	$(CC)  $(CFLAGS) $(LIBS) Main.cpp
+	$(CC) $(CFLAGS) $(LIBS) Main.cpp
 
 clean :
 	rm -rf *.o

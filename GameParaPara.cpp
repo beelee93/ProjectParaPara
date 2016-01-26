@@ -17,7 +17,6 @@ static FC_Font* statusFont = NULL;
 
 static double timer = 0;
 
-static uint16_t prevKeys = 0;
 static double accuracy = 1;
 static GOStationaryArrow* bwArrows[5];
 
@@ -30,10 +29,13 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeMode = 0;
     fadeTarget = GS_Null;
 	currInput = prevInput = 0;
-	
+
     // initialise gom
     gom = new GOMParaPara();
     this->SetObjectManager(gom);
+
+    // attach renderer to gom
+    gom->SetAttachedRenderer(GetMainRenderer());
 
     ChangeGameState(GS_Splash);
 
@@ -70,7 +72,22 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 	Arena.arrowList = new ArrowList();
 
 	// TEST: A random arrow list
-	
+	ArrowListNode *tempNode = new ArrowListNode();
+	tempNode->timeStamp=5.0f;
+	tempNode->arrows[0].flags |= AD_ENABLED;
+	Arena.arrowList->InsertNode(tempNode);
+
+	tempNode = new ArrowListNode();
+	tempNode->timeStamp = 10.0f;
+	tempNode->arrows[4].flags |= AD_ENABLED;
+	Arena.arrowList->InsertNode(tempNode);
+
+    tempNode = new ArrowListNode();
+    tempNode->timeStamp = 15.0f;
+    tempNode->arrows[2].flags |= AD_ENABLED | AD_CHAINED;
+    tempNode->arrows[2].chainDelay = 1.0f;
+    tempNode->arrows[3].flags = AD_ENABLED;
+    Arena.arrowList->InsertNode(tempNode);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -188,7 +205,7 @@ void GameParaPara::PollInput()
 #ifdef USE_KEYBOARD_INPUT
 	// Keyboard
 	const uint8_t* keys = SDL_GetKeyboardState(NULL);
-	
+
 	currInput = (
 		keys[SDL_SCANCODE_Y]      |
 		keys[SDL_SCANCODE_U] << 1 |
@@ -304,6 +321,7 @@ void GameParaPara::UpdateArena(double secs)
 	int tempArenaX, tempArenaY;
 	BL_GameObject* tempObj;
 	GODefaultArrow* tempArrow;
+	GODefaultArrowData tempArrowData = { 0 };
 	ArrowListNode* curNode;
 
 	SDL_Rect tempRect;
@@ -320,7 +338,7 @@ void GameParaPara::UpdateArena(double secs)
 			// play arena song
 			audio->PlayMusic(0);
 			timer = 0;
-			
+
 			// reset arrow list node pointer
 			Arena.arrowList->ResetCurrentNode();
 
@@ -347,7 +365,14 @@ void GameParaPara::UpdateArena(double secs)
 			{
 				if (ArrowIsEnabled(&(curNode->arrows[tempArenaX])))
 				{
-					objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArenaX);
+                    tempArrowData.flags = (tempArenaX << 4);
+                    if(ArrowIsChained(&(curNode->arrows[tempArenaX])))
+                    {
+                        tempArrowData.flags |= 1;
+                        tempArrowData.chainDelay = curNode->arrows[tempArenaX].chainDelay;
+                    }
+					objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArrowData);
+
 					// TODO: Adjust starting y position based on timer - timeStamp difference
 				}
 			}
@@ -404,7 +429,7 @@ void GameParaPara::UpdateArena(double secs)
 					}
 				}
 			}
-			
+
 			// TODO: Implement check for chain delays
 		}
 	}

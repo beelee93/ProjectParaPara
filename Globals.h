@@ -62,10 +62,11 @@ public:
     GODefaultArrow();
     void OnInit(int id, int type, void* data=NULL);
     void OnUpdate(double secs);
-	void OnRender(double secs, SDL_Renderer *renderer); 
+	void OnRender(double secs, SDL_Renderer *renderer);
     void Disappear();
 	int HasInput();
 	void SetInput();
+
 private:
     int disappearing; // is the arrow disappearing?
 	GODefaultArrowData attachedData;

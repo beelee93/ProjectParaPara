@@ -35,14 +35,14 @@ public:
 	int LoadDefinitionFile(const char* filename); // Loads up the time stamp data
 												  // into internal linked list
 	void Clear();  // Empties the list
-	ArrowListNode* GetCurrentNode(); // returns current node 
+	ArrowListNode* GetCurrentNode(); // returns current node
 	void ResetCurrentNode();
 	int NextNode();		// advance pointer to next node
 
 	void InsertNode(ArrowListNode* node);
 
 	// TODO: Implement this
-	void WriteToFile(const char* filename);
+	int WriteToFile(const char* filename);
 
 protected:
 	ArrowListNode* head;

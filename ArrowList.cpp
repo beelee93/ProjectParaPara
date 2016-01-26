@@ -120,27 +120,27 @@ int ArrowList::LoadDefinitionFile(const char* filename)
 		BL_EHLog("ArrowList::LoadDefinitionFile(): Invalid file.\n");
 		goto err;
 	}
-	
+
 	// now we read and populate the linked list
 	// <int timestamp><int flags>[chain delay0][chain delay1] ... [chain delay4]
 	while (!feof(file))
 	{
 		// read the timestamp
 		fread(&temp, INT_SIZE, 1, file);
-		
+
 		// read flags
 		fread(&flag, INT_SIZE, 1, file);
 
 		// create a new node
 		node = CreateArrowListNode();
 		node->timeStamp = temp / 1000.0f; // convert to seconds
-		
+
 		// now we set each arrow definition
 		for (i = 0; i < 5; i++)
 		{
 			enabled = flag & (0x1 << (i * 2));
 			chained = flag & (0x1 << (i * 2 + 1));
-			node->arrows[i].flags = (enabled ? AD_ENABLED : 0) | 
+			node->arrows[i].flags = (enabled ? AD_ENABLED : 0) |
 									((chained && enabled) ? AD_CHAINED : 0);
 			if (chained && enabled)
 			{
@@ -185,4 +185,66 @@ int ArrowList::NextNode()
 		currentNode = currentNode->next;
 
 	return (currentNode ? 1 : 0);
+}
+
+int ArrowList::WriteToFile(const char* filename)
+{
+    FILE* file = NULL;
+    int temp;
+    int i;
+    const size_t INT_SIZE = sizeof(int);
+    ArrowListNode *node;
+
+    if(!head) return 0;
+    if(!filename) return 0;
+
+    // open file
+    file = fopen(filename, "wb+");
+    if(!file)
+    {
+        BL_EHLog("ArrowList::WriteToFile(): Cannot open file for writing.\n");
+        return 0;
+    }
+
+    // write the identifier PPAD
+    temp = 0x44415050;
+    fwrite(&temp, INT_SIZE, 1, file);
+
+    // now we iterate through the linked list
+    node = head;
+    while(node)
+    {
+        // write the timestamp
+        temp = (int)(node->timeStamp * 1000);
+        fwrite(&temp, INT_SIZE, 1, file);
+
+        // write the flags
+        temp = 0;
+        for(i=0;i<5;i++)
+        {
+            if(ArrowIsEnabled(&node->arrows[i]))
+            {
+                temp |= (1 << (i*2));
+                if(ArrowIsChained(&node->arrows[i]))
+                    temp |= (1 << (i*2 + 1));
+            }
+        }
+        fwrite(&temp, INT_SIZE, 1, file);
+
+        // write any chains
+        for(i=0;i<5;i++)
+        {
+            if(ArrowIsEnabled(&node->arrows[i]) &&
+               ArrowIsChained(&node->arrows[i]))
+               {
+                    temp = (int)(node->arrows[i].chainDelay * 1000);
+                    fwrite(&temp, INT_SIZE, 1, file);
+               }
+        }
+
+        // move on to next node
+        node = node->next;
+    }
+    fclose(file);
+    return 1;
 }

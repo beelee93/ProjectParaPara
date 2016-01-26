@@ -208,7 +208,6 @@ int BL_Game::InitWindow(int fullscreen)
     }
 
     SDL_SetRenderDrawBlendMode(mainRenderer, SDL_BLENDMODE_BLEND);
-
     return 1;
 }
 

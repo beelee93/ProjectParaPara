@@ -14,13 +14,13 @@ void GODefaultArrow::OnInit(int id, int type, void* data)
     disappearing = 0;
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS);
     imageSpeed=0;
-	
+
 	// Zero out the data
 	SDL_memset(&this->attachedData, 0, sizeof(GODefaultArrowData));
 
-	if (!data)
+	if (data)
 		this->attachedData = *((GODefaultArrowData*)(data));
-	
+
 	imageIndex = HIBITS(attachedData.flags);
 
     x = 208 + 80*imageIndex;
@@ -59,7 +59,53 @@ void GODefaultArrow::OnUpdate(double secs)
 
 void GODefaultArrow::OnRender(double secs, SDL_Renderer* renderer)
 {
-	BL_GameObject::OnRender(secs, renderer);
+    if(!visible || destroyFlag) return;
+
+    float dy=0;
+    SDL_Texture* tex;
+
+    // draw the main sprite
+    int tempImgIndex = (int)imageIndex;
+    SDL_Point tempPoint;
+    tempPoint.x = originX;
+    tempPoint.y = originY;
+
+    if(sprite)
+    {
+            tex=sprite->GetTexture();
+            SDL_SetTextureAlphaMod(tex, (int)(alpha*255.0));
+            SDL_SetTextureColorMod(tex, tintR, tintG, tintB);
+
+            sprite->Render(tempImgIndex,
+                (int)(x - originX),
+                (int)(y - originY),
+                (int)((sprite->GetRect(tempImgIndex).w) * imageScaleX),
+                (int)((sprite->GetRect(tempImgIndex).h) * imageScaleY),
+                imageAngle, &tempPoint, SDL_FLIP_NONE);
+    }
+
+    if(LOBITS(this->attachedData.flags))
+    {
+        // calculate end of chain y-ordinate
+        dy = y + this->attachedData.chainDelay * ARROW_SPEED;
+
+        // render end of chain arrow
+        sprite->Render(tempImgIndex,
+                (int)(x - originX),
+                (int)(dy - originY),
+                (int)((sprite->GetRect(tempImgIndex).w) * imageScaleX),
+                (int)((sprite->GetRect(tempImgIndex).h) * imageScaleY),
+                imageAngle, &tempPoint, SDL_FLIP_NONE);
+
+        // render chain
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, (int)(alpha*255.0));
+
+        // normal disappearing sequence
+        if(disappearing)
+            SDL_RenderDrawLine(renderer, xs+32, ys+32, xs+32, (int)(dy + 32));
+        else
+            SDL_RenderDrawLine(renderer, x+32, y+32, x+32, (int)(dy + 32));
+    }
 }
 
 
