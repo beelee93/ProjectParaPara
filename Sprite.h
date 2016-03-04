@@ -27,6 +27,11 @@ public:
     void Render(int elemIndex,int dx, int dy, int dw, int dh,
            double angle, SDL_Point* center,SDL_RendererFlip flip);
 
+	// Renders the clipped part of the specified element.
+	// Source dimensions are relative to the element
+	void RenderClipped(int elemIndex, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh,
+		double angle, SDL_Point* center, SDL_RendererFlip flip);
+
     int GetCount();
     SDL_Texture* GetTexture();
     SDL_Rect GetRect(int elem);

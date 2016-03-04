@@ -37,9 +37,8 @@ void GOPinkFlash::Flash()
     alpha = 0.5;
 }
 
-void GOPinkFlash::OnRender(double secs)
+void GOPinkFlash::OnRender(double secs, SDL_Renderer* renderer)
 {
-    static SDL_Renderer* renderer=((BL_GOM*)GetAttachedGOM())->GetAttachedRenderer();
     SDL_SetRenderDrawColor(renderer, 255,0,255,(int)(alpha*255.0));
     SDL_RenderFillRect(renderer, &drawRect);
 }

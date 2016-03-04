@@ -15,6 +15,7 @@
 #define OBJ_DEFAULT_ARROWS      0
 #define OBJ_DEFAULT_ARROWS_BW   1
 #define OBJ_SHOCKWAVE           2
+#define SPR_CHAINED_BACK		3 /* Not used as object */
 #define OBJ_PINK_FLASH          9000
 
 
@@ -23,6 +24,7 @@
 #include "SpriteLoader.h"
 #include "SDL_FontCache.h"
 
+#include "InputParaPara.h"
 #include "GameParaPara.h"
 
 /////// Constants ////////
@@ -66,9 +68,21 @@ public:
     void Disappear();
 	int HasInput();
 	void SetInput();
+	int IsChained();
+	int GetChainSuccess();
+	int IsDisappearing();
+	void FlagForChain(int flag);
+	void SetAccuracy(double accu);
+	double GetAccuracy();
 
 private:
     int disappearing; // is the arrow disappearing?
+	int chainInput; // This has to be 1. If this is 0, the chain is broken prematurely.
+	int chainSuccess; // This is set to 1 when the chain is complete
+	int chainBroken;
+
+	int colX;
+	double accuracy;
 	GODefaultArrowData attachedData;
 	int xs, ys;		  // (x,y) upon invoking Disappear
 	int hasInput;	  // has already validated a user input
@@ -81,7 +95,7 @@ public:
     void OnInit(int id, int type, void* data=NULL);
     void OnUpdate(double secs);
     void Flash();
-    void OnRender(double secs);
+    void OnRender(double secs, SDL_Renderer* renderer);
 private:
     SDL_Rect drawRect;
 };

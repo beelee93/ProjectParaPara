@@ -28,7 +28,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeTimer = 0.0;
     fadeMode = 0;
     fadeTarget = GS_Null;
-	currInput = prevInput = 0;
+	
 
     // initialise gom
     gom = new GOMParaPara();
@@ -68,13 +68,17 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 		audio->AddMusic(songNames[1]);
 	}
 
+	// create new input system
+	input = new InputParaPara();
+
 	// create arrow list
 	Arena.arrowList = new ArrowList();
 
 	// TEST: A random arrow list
 	ArrowListNode *tempNode = new ArrowListNode();
 	tempNode->timeStamp=5.0f;
-	tempNode->arrows[0].flags |= AD_ENABLED;
+	tempNode->arrows[0].flags |= AD_ENABLED | AD_CHAINED;
+	tempNode->arrows[0].chainDelay = 2.0f;
 	Arena.arrowList->InsertNode(tempNode);
 
 	tempNode = new ArrowListNode();
@@ -93,6 +97,9 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 ///////////////////////////////////////////////////////////////////
 GameParaPara::~GameParaPara()
 {
+	// free input
+	delete input;
+
     // free GOM
     if(gom) delete gom;
 
@@ -117,7 +124,10 @@ GameParaPara::~GameParaPara()
 void GameParaPara::OnUpdate(double secs)
 {
     BL_Game::OnUpdate(secs);
-	uint8_t riseKey = 0, fallKey = 0;
+
+	// Poll inputs
+	input->Update();
+
 	SDL_Rect tempRect = {0};
 
 	switch (gameState)
@@ -198,26 +208,6 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
     SDL_RenderPresent(renderer);
 }
 
-///////////////////////////////////////////////////////////////////
-void GameParaPara::PollInput()
-{
-	prevInput = currInput;
-#ifdef USE_KEYBOARD_INPUT
-	// Keyboard
-	const uint8_t* keys = SDL_GetKeyboardState(NULL);
-
-	currInput = (
-		keys[SDL_SCANCODE_Y]      |
-		keys[SDL_SCANCODE_U] << 1 |
-		keys[SDL_SCANCODE_I] << 2 |
-		keys[SDL_SCANCODE_O] << 3 |
-		keys[SDL_SCANCODE_P] << 4);
-#endif
-
-#ifdef USE_GPIO_INPUT
-	// Look at GPIO pins
-#endif
-}
 
 ///////////////////////////////////////////////////////////////////
 void GameParaPara::OnEvent(SDL_Event* event, double secs)
@@ -288,7 +278,7 @@ void GameParaPara::OnEnterState(GameState newState)
     case GS_Arena:
         timer = 2.0;
         Arena.arenaStarted = 0;
-		prevInput = currInput = 0;
+		input->Reset();
         break;
     }
 }
@@ -318,14 +308,15 @@ void GameParaPara::FadeToGameState(GameState state)
 
 void GameParaPara::UpdateArena(double secs)
 {
-	int tempArenaX, tempArenaY;
+	int tempArenaX, tempArenaY, maskedInput;
+	double timeDiff;
 	BL_GameObject* tempObj;
 	GODefaultArrow* tempArrow;
 	GODefaultArrowData tempArrowData = { 0 };
 	ArrowListNode* curNode;
 
 	SDL_Rect tempRect;
-	uint8_t riseKey;
+	uint8_t riseKey, currInput;
 
 	if (!Arena.arenaStarted)
 	{
@@ -357,31 +348,32 @@ void GameParaPara::UpdateArena(double secs)
 		// Playing time!
 		timer += secs;
 
-		while(Arena.arrowList->GetCurrentNode() /* make sure current node is not NULL */&&
-			timer >= (Arena.arrowList->GetCurrentNode()->timeStamp - FlightTime) /* timing */)
+		while (Arena.arrowList->GetCurrentNode() /* make sure current node is not NULL */ &&
+			(timeDiff = (timer - (Arena.arrowList->GetCurrentNode()->timeStamp - FlightTime))) >= 0 /* timing */)
 		{
 			curNode = Arena.arrowList->GetCurrentNode();
 			for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
 			{
 				if (ArrowIsEnabled(&(curNode->arrows[tempArenaX])))
 				{
-                    tempArrowData.flags = (tempArenaX << 4);
-                    if(ArrowIsChained(&(curNode->arrows[tempArenaX])))
-                    {
-                        tempArrowData.flags |= 1;
-                        tempArrowData.chainDelay = curNode->arrows[tempArenaX].chainDelay;
-                    }
-					objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArrowData);
+					tempArrowData.flags = (tempArenaX << 4);
+					if (ArrowIsChained(&(curNode->arrows[tempArenaX])))
+					{
+						tempArrowData.flags |= 1;
+						tempArrowData.chainDelay = curNode->arrows[tempArenaX].chainDelay;
+					}
+					tempObj = objManager->CreateObject(OBJ_DEFAULT_ARROWS, &tempArrowData);
 
-					// TODO: Adjust starting y position based on timer - timeStamp difference
+					// Adjust starting y position based on timer - timeStamp difference
+					tempObj->y -= ARROW_SPEED * timeDiff;
 				}
 			}
 			Arena.arrowList->NextNode();
 		}
 
 		// Poll input
-		PollInput();
-		riseKey = ~prevInput & currInput; // look for rising edge
+		riseKey = input->GetRisingEdge();
+		currInput = input->GetCurrentInput();
 
 		// look for flying arrows
 		tempRect.x = 208;
@@ -398,39 +390,82 @@ void GameParaPara::UpdateArena(double secs)
 				// we flash the corresponding arrow
 				bwArrows[tempArenaX]->Flash();
 			}
+		}
 
-			// is it a rising or falling edge?
-			if (riseKey)
+		// loop thru every detected object
+		for (tempArenaY = 0; (tempArrow=(GODefaultArrow*)nearObjs[tempArenaY]) != NULL; tempArenaY++)
+		{
+			tempArenaX = (int)(tempArrow->imageIndex);
+			if (tempArrow->IsChained())
 			{
-				// we look for singular arrows and beginning of arrow chain
-				// loop through all flying arrows detected
-				for (tempArenaY = 0; nearObjs[tempArenaY] != NULL; tempArenaY++)
+				// this is a chained arrow
+
+				// check if arrow has been activated
+				if (tempArrow->HasInput())
 				{
-					// is riseKey for the correct column?
-					if ((riseKey &  (1 << tempArenaX)) == 0) continue;
+					// provide input to arrow
+					tempArrow->FlagForChain(currInput & (1 << tempArenaX));
+				}
+				else if ((riseKey & (1 << tempArenaX)) != 0)
+				{
+					// look for rising edge
+					tempArrow->SetAccuracy(1 - ((tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0);
+					tempArrow->y = bwArrows[tempArenaX]->y;
+					tempArrow->SetInput();
+					tempArrow->FlagForChain(1);
+					
+				}
 
-					tempArrow = (GODefaultArrow*)nearObjs[tempArenaY];
-					if (tempArenaX == tempArrow->imageIndex &&		/* select arrows in the column */
-						tempArrow->alpha > 0.2 &&					/* give some allowance */
-						!tempArrow->HasInput())						/* has arrow been activated? */
-					{
-						accuracy += 1 - (
-							(tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0;
-						accuracy /= 2;
+				// check for success
+				if (tempArrow->GetChainSuccess())
+				{
+					// arrow chain success
+					accuracy += tempArrow->GetAccuracy();
+					accuracy /= 2;
 
-						// make it disappear
-						tempArrow->y = bwArrows[tempArenaX]->y;
-						tempArrow->SetInput();
+					// make arrow disappear
+					if(!tempArrow->IsDisappearing())
+						tempArrow->Disappear();
 
-						// create a shockwave at arrow
-						tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
-						tempObj->x = bwArrows[tempArenaX]->x + 32;
-						tempObj->y = bwArrows[tempArenaX]->y + 32;
-					}
+					// create a shockwave at arrow
+					tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
+					tempObj->x = bwArrows[tempArenaX]->x + 32;
+					tempObj->y = bwArrows[tempArenaX]->y + 32;
+				}
+			}
+			else
+			{
+				// this is a singular arrow
+
+				// check if this arrow has already been activated
+				if (tempArrow->HasInput())
+					continue; // next arrow plz
+
+				// check if riseKey corresponds to imageIndex
+				if ((riseKey & (1 << (int)(tempArrow->imageIndex))) == 0)
+					continue;
+
+				// has not fully disappeared
+				if (tempArrow->alpha > 0.2)
+				{
+					accuracy += 1 - (
+						(tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0;
+					accuracy /= 2;
+
+					// make it disappear
+					tempArrow->y = bwArrows[tempArenaX]->y;
+					tempArrow->SetInput();
+
+					// create a shockwave at arrow
+					tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
+					tempObj->x = bwArrows[tempArenaX]->x + 32;
+					tempObj->y = bwArrows[tempArenaX]->y + 32;
 				}
 			}
 
-			// TODO: Implement check for chain delays
 		}
+
+		
 	}
+	
 }

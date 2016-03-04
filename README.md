@@ -14,6 +14,7 @@ in arcades using Raspberry Pi.
 |3  |SDL2_TTF           |Font rendering support          |
 |4  |SDL2_Mixer         |Audio                           |
 |5  |SDL_FontCache      |Optimised text rendering        |
+|6  |WiringPi		    |To interface GPIO pins          |
 
 ---
 
@@ -75,3 +76,7 @@ input file (sprite definitions file).
 
 Implements a sorted linked list to be used by the
 game object manager during rendering cycle.
+
+###InputParaPara.cpp
+
+Contains implementations to interface keyboard (and GPIO)

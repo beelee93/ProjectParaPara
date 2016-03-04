@@ -141,12 +141,15 @@ void BL_Game::MainLoop()
 // Called on every update cycle
 void BL_Game::OnUpdate(double secs)
 {
+	if (secs > 2.0f) return;
+
     if(objManager) objManager->Update(secs);
 }
 
 // Called on every render cycle
 void BL_Game::OnRender(SDL_Renderer* renderer,double secs)
 {
+	if (secs > 2.0f) return;
     SDL_SetRenderDrawColor(renderer, 0,0,0, 255);
     SDL_RenderClear(renderer);
 

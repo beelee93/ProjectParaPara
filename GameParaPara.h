@@ -49,6 +49,5 @@ protected:
 	int songCount;
 
 	// input polling
-	uint8_t currInput;
-	uint8_t prevInput;
+	InputParaPara* input;
 };

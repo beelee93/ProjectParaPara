@@ -7,6 +7,8 @@
 #include "Sprite.h"
 
 static SDL_Rect destRect;
+static SDL_Rect srcRectTemp;
+
 static char msg[512] = "";
 
 BL_Sprite::BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCount)
@@ -80,6 +82,23 @@ void BL_Sprite::Render(int elemIndex, int dx, int dy, int dw, int dh,
     destRect.h=dh;
     SDL_RenderCopyEx(renderer, texture, &(srcRects[elemIndex]),
         &destRect, angle, center, flip);
+}
+
+// Renders the clipped part of the specified element. Source dimensions are relative to the element.
+void BL_Sprite::RenderClipped(int elemIndex, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh,
+	double angle, SDL_Point* center, SDL_RendererFlip flip)
+{
+	srcRectTemp = srcRects[elemIndex];
+	srcRectTemp.x += sx;
+	srcRectTemp.y += sy;
+	srcRectTemp.w = sw;
+	srcRectTemp.h = sh;
+	destRect.x = dx;
+	destRect.y = dy;
+	destRect.w = dw;
+	destRect.h = dh;
+	SDL_RenderCopyEx(renderer, texture, &srcRectTemp,
+		&destRect, angle, center, flip);
 }
 
 void BL_Sprite::SetRect(int elemIndex, int x, int y, int w, int h)

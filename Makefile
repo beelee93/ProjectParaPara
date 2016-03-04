@@ -3,11 +3,19 @@ OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
 	   GOStationaryArrow.o Main.o SDL_FontCache.o \
 	   RenderQueue.o GOPinkFlash.o Audio.o \
-	   GOShockwave.o ArrowList.o
+	   GOShockwave.o ArrowList.o InputParaPara.o 
 
 GOH = Globals.h GameObject.h
+NORMAL_LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer 
 
-LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+ifeq ($(rpi), 1)
+	LIBS = $(NORMAL_LIBS) -lwiringPi
+	CFLAGS = -c -D RPI
+else
+	LIBS = $(NORMAL_LIBS)
+	CFLAGS = -c
+endif
+
 CFLAGS = -c
 CC = g++
 
@@ -66,6 +74,9 @@ GOPinkFlash.o : $(GOH) GOPinkFlash.cpp
 
 GameParaPara.o : Game.h Globals.h GameParaPara.h GameParaPara.cpp
 	$(CC) $(CFLAGS) $(LIBS) GameParaPara.cpp
+
+InputParaPara.o : InputParaPara.h InputParaPara.cpp
+	$(CC) $(CFLAGS) $(LIBS) InputParaPara.cpp
 
 Main.o : Game.h Globals.h Main.cpp
 	$(CC) $(CFLAGS) $(LIBS) Main.cpp

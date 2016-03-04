@@ -3,7 +3,7 @@
 # Format should be easy to follow
 #
 
-COUNT 3
+COUNT 4
 
 # 0 - Default arrows
 SPRITE res/default_arrows.png 5
@@ -24,3 +24,7 @@ RECT 0 64 64 64
 # 2 - Shockwave effect
 SPRITE res/shockwave.png 1
 RECT 0 0 256 256
+
+# 3 - Chained back
+SPRITE res/chained_back.png 1
+RECT 0 0 64 64

@@ -23,9 +23,6 @@ BL_GameObject* GOMParaPara::OnCreateObject(int type)
         case OBJ_PINK_FLASH:
             return new GOPinkFlash();
 
-       // case OBJ_SHOCKWAVE:
-       //     return new GOShockwave();
-
         default:
             BL_EHLog("GOMParaPara::OnCreateObject(): No such object defined.");
             break;
