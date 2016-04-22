@@ -1,0 +1,7 @@
+/Debug/
+/*.sdf
+/*.sln
+/*.suo
+/*.vcxproj
+/*.vcxproj.*
+/status.log
