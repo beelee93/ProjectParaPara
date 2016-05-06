@@ -20,15 +20,22 @@ static double timer = 0;
 static double accuracy = 1;
 static GOStationaryArrow* bwArrows[5];
 
+static int health = 100;
+
+static GameParaPara* theGame = NULL;
+
 ///////////////////////////////////////////////////////////////////
 GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 {
+	theGame = this;
+
     // set initial game state
     gameState = GS_Splash;
     fadeTimer = 0.0;
     fadeMode = 0;
     fadeTarget = GS_Null;
 	
+	SongSelection.currentSelection = 0;
 
     // initialise gom
     gom = new GOMParaPara();
@@ -55,18 +62,16 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 
 	if (initialised)
 	{
-		// TODO: Make a script parser that loads song names
-		songNames = (char**)calloc(2, sizeof(char*));
-		songNames[0] = (char*)calloc(60, sizeof(char));
-		songNames[1] = (char*)calloc(60, sizeof(char));
-		songCount = 2;
-		sprintf(songNames[0], "res/Yesterday.mp3");
-		sprintf(songNames[1], "res/IntoYourHeart.mp3");
-
-		// load up sounds and music
-		audio->AddMusic(songNames[0]);
-		audio->AddMusic(songNames[1]);
+		if (!BL_Audio::LoadMusicList("music.dat", audio))
+		{
+			this->initialised = 0;
+			BL_EHLog("GameParaPara(): Failed to load music list.\n");
+			return;
+		}
 	}
+
+	// load sounds
+	/* 0 */ audio->AddSound("res/beep.wav");
 
 	// create new input system
 	input = new InputParaPara();
@@ -106,14 +111,6 @@ GameParaPara::~GameParaPara()
     // free fonts
     if(statusFont) FC_FreeFont(statusFont);
 
-	// free all song names
-	for (int i = 0; i < songCount; i++)
-	{
-		free(songNames[i]);
-		songNames[i] = NULL;
-	}
-	free(songNames);
-
 	// free arrow list
 	if(Arena.arrowList)
 		delete Arena.arrowList;
@@ -146,6 +143,21 @@ void GameParaPara::OnUpdate(double secs)
 	case GS_Arena:
 		UpdateArena(secs);
 		break;
+
+		/////////// UPDATE FOR MAIN MENU //////////
+	case GS_MainMenu:
+		UpdateMainMenu(secs);
+		break;
+
+		/////////// UPDATE FOR SONG SELECTION //////////
+	case GS_SongSelection :
+		UpdateSongSelection(secs);
+		break;
+
+	case GS_Scoreboard: 
+		UpdateScoreboard(secs);
+		break;
+
 	}
 
     // Transitional fade mechanism
@@ -182,9 +194,8 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
         if(objManager) objManager->Render(secs);
-        FC_Draw(statusFont, renderer, 3,48, "Song time: %f\nAvg Accuracy: %f",
-            timer, accuracy);
-
+        FC_Draw(statusFont, renderer, 3,48, "Song time: %f\nAvg Accuracy: %f\nHealth: %d",
+            timer, accuracy, health);
         break;
 
     default:
@@ -223,27 +234,17 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                 case SDLK_ESCAPE:   // end game
                     if(gameState == GS_MainMenu)
                         SignalExit();
-                    else if(gameState == GS_Arena)
-                        FadeToGameState(GS_MainMenu);
+					else if (gameState == GS_Arena)
+						FadeToGameState(GS_SongSelection);
+					else if (gameState == GS_SongSelection)
+						FadeToGameState(GS_MainMenu);
+					else if (gameState == GS_Scoreboard)
+						FadeToGameState(GS_SongSelection);
                     break;
                 case SDLK_a:
                     GetObjectManager()->CreateObject(OBJ_DEFAULT_ARROWS);
                     break;
 
-            }
-            break;
-
-        ///// Keydown Event /////
-        case SDL_KEYDOWN:
-            switch(event->key.keysym.sym)
-            {
-            case SDLK_RETURN:
-                if(gameState == GS_MainMenu)
-                {
-                    // Transition to SongSelection
-                    FadeToGameState(/*GS_SongSelection*/ GS_Arena);
-                }
-                break;
             }
             break;
      }
@@ -275,11 +276,25 @@ void GameParaPara::OnEnterState(GameState newState)
     case GS_Splash:
         timer = 2.0;
         break;
+
+	case GS_MainMenu:
+		timer = 0;
+		MainMenu.index = 0;
+		input->Reset();
+		break;
     case GS_Arena:
+		health = 100;
+		accuracy = 1.0;
         timer = 2.0;
         Arena.arenaStarted = 0;
 		input->Reset();
         break;
+
+	case GS_Scoreboard:
+		Scoreboard.index = 0;
+		timer = 0;
+		input->Reset();
+		break;
     }
 }
 
@@ -305,6 +320,60 @@ void GameParaPara::FadeToGameState(GameState state)
 ///////////////////////////////////////////////////////////////////
 // UPDATE FUNCTIONS
 ///////////////////////////////////////////////////////////////////
+
+void GameParaPara::UpdateMainMenu(double secs)
+{
+	if (fadeMode) return;
+
+	uint8_t inp = input->GetRisingEdge();
+	if (inp & (1 << MainMenu.index))
+	{
+		MainMenu.index++;
+		audio->PlaySound(SND_BEEP);
+
+		timer = 0.5;
+		if (MainMenu.index >= 5) {
+			//FadeToGameState(GS_SongSelection);
+			// there's only 1 song currently...
+			FadeToGameState(GS_Arena);
+		}
+	}
+
+	timer -= secs;
+	if (timer <= 0)
+	{
+		MainMenu.index = 0;
+		timer = 0;
+	}
+}
+
+void GameParaPara::UpdateSongSelection(double secs)
+{
+	const uint8_t* k = SDL_GetKeyboardState(NULL);
+	if (k[SDL_SCANCODE_RETURN])
+	{
+		FadeToGameState(GS_Arena);
+	}
+}
+
+void GameParaPara::UpdateScoreboard(double secs)
+{
+	if (fadeMode) return;
+
+	uint8_t inp = input->GetRisingEdge();
+	if (inp & (1 << Scoreboard.index))
+	{
+		Scoreboard.index++;
+		audio->PlaySound(SND_BEEP);
+
+		timer = 0.5;
+		if (Scoreboard.index >= 5) {
+			//FadeToGameState(GS_SongSelection);
+			// there's only 1 song currently...
+			FadeToGameState(GS_MainMenu);
+		}
+	}
+}
 
 void GameParaPara::UpdateArena(double secs)
 {
@@ -348,6 +417,12 @@ void GameParaPara::UpdateArena(double secs)
 		// Playing time!
 		timer += secs;
 
+		if (!fadeMode && timer>(audio->GetCurrentMusic()->length)) {
+			// Victory
+			isVictory = 1;
+			FadeToGameState(GS_Scoreboard);
+		}
+
 		while (Arena.arrowList->GetCurrentNode() /* make sure current node is not NULL */ &&
 			(timeDiff = (timer - (Arena.arrowList->GetCurrentNode()->timeStamp - FlightTime))) >= 0 /* timing */)
 		{
@@ -366,6 +441,9 @@ void GameParaPara::UpdateArena(double secs)
 
 					// Adjust starting y position based on timer - timeStamp difference
 					tempObj->y -= ARROW_SPEED * timeDiff;
+
+					// set the failure callback
+					((GODefaultArrow*)tempObj)->SetFailedCallback(ArrowFailureHandler);
 				}
 			}
 			Arena.arrowList->NextNode();
@@ -406,7 +484,7 @@ void GameParaPara::UpdateArena(double secs)
 					// provide input to arrow
 					tempArrow->FlagForChain(currInput & (1 << tempArenaX));
 				}
-				else if ((riseKey & (1 << tempArenaX)) != 0)
+				else if ((riseKey & (1 << tempArenaX)) != 0) // arrow has not been activated
 				{
 					// look for rising edge
 					tempArrow->SetAccuracy(1 - ((tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0);
@@ -431,6 +509,10 @@ void GameParaPara::UpdateArena(double secs)
 					tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
 					tempObj->x = bwArrows[tempArenaX]->x + 32;
 					tempObj->y = bwArrows[tempArenaX]->y + 32;
+
+					// increase health
+					health += 5;
+					if (health > 100) health = 100;
 				}
 			}
 			else
@@ -460,12 +542,27 @@ void GameParaPara::UpdateArena(double secs)
 					tempObj = objManager->CreateObject(OBJ_SHOCKWAVE);
 					tempObj->x = bwArrows[tempArenaX]->x + 32;
 					tempObj->y = bwArrows[tempArenaX]->y + 32;
+
+					// increase health
+					health += 2;
+					if (health > 100) health = 100;
 				}
 			}
 
 		}
-
-		
 	}
-	
+}
+
+// Handles arrow failures
+void ArrowFailureHandler(GODefaultArrow* target)
+{
+	accuracy /= 2;
+	health -= 30;
+
+	if (health < 0) {
+		health = 0;
+
+		theGame->isVictory = 1;
+		theGame->FadeToGameState(GS_Scoreboard);
+	}
 }

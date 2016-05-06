@@ -1,5 +1,12 @@
+#ifndef _GAMEPARAPARA_H
+#define _GAMEPARAPARA_H
+
 #include "Game.h"
 #include "ArrowList.h"
+
+#define SND_BEEP 0
+
+class GODefaultArrow;
 
 enum GameState {
 	GS_Null,                /* Used by fadeTarget */
@@ -28,9 +35,14 @@ public:
 
 	// Update functions
 	void UpdateArena(double secs);
+	void UpdateSongSelection(double secs);
+	void UpdateMainMenu(double secs);
+	void UpdateScoreboard(double secs);
 
 protected:
 	GameState gameState;
+	int isVictory;
+
 	double timer;
 
 	// Transition fade mechanism
@@ -44,10 +56,21 @@ protected:
 		ArrowList* arrowList;
 	} Arena;
 
-	// Song names
-	char** songNames;
-	int songCount;
+	struct {
+		int index;
+	} MainMenu;
+
+	struct {
+		int currentSelection;
+	} SongSelection;
+
+	struct {
+		int index;
+	} Scoreboard;
 
 	// input polling
 	InputParaPara* input;
+
+	friend void ArrowFailureHandler(GODefaultArrow*);
 };
+#endif

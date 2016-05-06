@@ -11,7 +11,7 @@ static char errMsg[256] = "";
 BL_Audio::BL_Audio()
 {
 	initialised = 0;
-	musics = NULL;
+	musicInfo = NULL;
 	chunks = NULL;
 	
 	int b = Mix_Init(MIX_INIT_OGG | MIX_INIT_MP3);
@@ -37,13 +37,14 @@ BL_Audio::BL_Audio()
 	chunkCapacity = 10;
 	chunkCount = 0;
 
-	musics = (Mix_Music**)malloc(sizeof(Mix_Music*) * 10);
-	if (!musics)
+	musicInfo = (MusicInformation*)malloc(sizeof(MusicInformation) * 10);
+	if (!musicInfo)
 	{
 		BL_EHLog("BL_Audio::ctor(): Cannot malloc music list.\n");
 		return;
 	}
-	SDL_memset(musics, 0, sizeof(Mix_Music*) * 10);
+	SDL_memset(musicInfo, 0, sizeof(MusicInformation) * 10);
+
 	currentMusic = -1;
 	musicCapacity = 10;
 	musicCount = 0;
@@ -53,16 +54,16 @@ BL_Audio::BL_Audio()
 
 void BL_Audio::PurgeMusic()
 {
-	if (!musics) return;
+	if (!musicInfo) return;
 
 	// free all music
 	int i;
 	for (i = 0; i < musicCapacity; i++)
 	{
-		if (musics[i] != NULL)
+		if (musicInfo[i].music != NULL)
 		{
-			Mix_FreeMusic(musics[i]);
-			musics[i] = NULL;
+			Mix_FreeMusic(musicInfo[i].music);
+			musicInfo[i].music = NULL;
 		}
 	}
 	musicCount = 0;
@@ -85,7 +86,7 @@ void BL_Audio::PurgeSound()
 	chunkCount = 0;
 }
 
-int BL_Audio::AddMusic(const char* filename)
+int BL_Audio::AddMusic(const char* filename, const char* name, double length, const char* arrowDef)
 {
 	if (!filename) return -1;
 	if (!initialised) return -1;
@@ -101,15 +102,20 @@ int BL_Audio::AddMusic(const char* filename)
 	if (musicCount >= musicCapacity)
 	{
 		// expand capacity
-		Mix_Music** temp = (Mix_Music**)malloc(sizeof(Mix_Music*) * (musicCapacity+10));
-		SDL_memset(musics, 0, sizeof(Mix_Music*) * (musicCapacity + 10));
-		SDL_memcpy(temp, musics, sizeof(Mix_Music*) * musicCapacity);
+		MusicInformation* temp = (MusicInformation*)malloc(sizeof(MusicInformation) * (musicCapacity + 10));
+		SDL_memset(temp, 0, sizeof(MusicInformation) * (musicCapacity + 10));
+		SDL_memcpy(temp, musicInfo, sizeof(MusicInformation) * musicCapacity);
 
-		free(musics);
-		musics = temp;
+		free(musicInfo);
+		musicInfo = temp;
 		musicCapacity += 10;
 	}
-	musics[musicCount++] = mus;
+	
+	musicInfo[musicCount].length = length;
+	musicInfo[musicCount].music = mus;
+	SDL_memcpy(musicInfo[musicCount].arrowDef, arrowDef, 127);
+	SDL_memcpy(musicInfo[musicCount].name, name, 49);
+	musicCount++;
 
 	return musicCount - 1;
 }
@@ -147,10 +153,10 @@ void BL_Audio::PlayMusic(int index)
 {
 	if (!initialised) return;
 	if (index < 0 || index >= musicCapacity) return;
-	if (!musics[index]) return;
+	if (!musicInfo[index].music) return;
 
 	StopMusic();
-	Mix_PlayMusic(musics[index], 0);
+	Mix_PlayMusic(musicInfo[index].music, 0);
 	currentMusic = index;
 }
 
@@ -183,12 +189,64 @@ BL_Audio::~BL_Audio()
 	PurgeMusic();
 	PurgeSound();
 
-	if(musics)
-		free(musics);
+	if(musicInfo)
+		free(musicInfo);
 	
 	if (chunks)
 		free(chunks);
 
 	Mix_CloseAudio();
 	Mix_Quit();
+}
+
+int BL_Audio::LoadMusicList(const char* filename, BL_Audio* audio)
+{
+	int songCount;
+	int i;
+	FILE *file;
+	char fname[256];
+	char name[50];
+	char arrowDef[128];
+	double length;
+
+	if (!audio || !filename) return 0;
+
+	// <filename> <name> <length> <arrowDefFile>
+	file = fopen(filename, "r");
+	if (!file)
+	{
+		sprintf(errMsg, "LoadMusicList(): Cannot load music list '%s'.\n", filename);
+		BL_EHLog(errMsg);
+		return 0;
+	}
+
+	// get number of songs
+	songCount=0;
+	fscanf(file, "%d", &songCount);
+
+	for (i = 0; i < songCount; i++)
+	{
+		fscanf(file, "%s %s %lf %s", fname, name, &length, arrowDef);
+		audio->AddMusic(fname, name, length, arrowDef);
+	}
+
+	fclose(file);
+	return 1;
+}
+
+MusicInformation* BL_Audio::GetMusicInformation(int index)
+{
+	if (!initialised) return NULL;
+	if (index<0 || index>=musicCount) return NULL;
+
+	return &musicInfo[index];
+}
+
+MusicInformation* BL_Audio::GetCurrentMusic()
+{
+	return GetMusicInformation(currentMusic);
+}
+
+int BL_Audio::GetMusicCount() {
+	return musicCount;
 }

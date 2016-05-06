@@ -11,9 +11,12 @@ GODefaultArrow::GODefaultArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS) { }
 void GODefaultArrow::OnInit(int id, int type, void* data)
 {
 	hasInput = 0;
+	this->failedCallback = NULL;
 	this->chainInput = 1;
 	this->chainSuccess = 0;
 	this->chainBroken = 0;
+	this->chainBrokenAcknowledged = 0;
+
     disappearing = 0;
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS);
     imageSpeed=0;
@@ -81,7 +84,7 @@ void GODefaultArrow::OnUpdate(double secs)
 		}
 	}
 
-    if(disappearing)
+    if(disappearing && alpha>0)
     {
         alpha -= 10.0*secs;
         imageScaleX += 9*secs;
@@ -89,10 +92,15 @@ void GODefaultArrow::OnUpdate(double secs)
 		x = (int)(xs + 32 - imageScaleX * 32);
 		y = (int)(ys + 32 - imageScaleY * 32);
 
-        if(alpha<=0)
+        if(alpha<0)
         {
             alpha=0;
             SignalDestroy();
+			if (this->failedCallback)
+			{
+				if(!this->hasInput)	this->failedCallback(this);
+				else if (this->IsChained() && this->attachedData.chainDelay>0) this->failedCallback(this);
+			}
         }
     }
 }
@@ -182,6 +190,15 @@ int GODefaultArrow::IsChained()
 	return LOBITS(this->attachedData.flags);
 }
 
+int GODefaultArrow::IsChainBroken()
+{
+	int res = this->chainBroken;
+	if (!res) return res;
+
+	if (this->chainBrokenAcknowledged) return 0;
+	else return 1;
+}
+
 int GODefaultArrow::GetChainSuccess()
 {
 	if (chainSuccess)
@@ -216,4 +233,9 @@ void GODefaultArrow::Disappear()
     vy = 0;
 	xs = x;
 	ys = y;
+}
+
+void GODefaultArrow::SetFailedCallback(void(*callback)(GODefaultArrow*))
+{
+	this->failedCallback = callback;
 }

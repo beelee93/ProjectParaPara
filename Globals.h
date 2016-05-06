@@ -70,22 +70,27 @@ public:
 	void SetInput();
 	int IsChained();
 	int GetChainSuccess();
+	int IsChainBroken();
 	int IsDisappearing();
 	void FlagForChain(int flag);
 	void SetAccuracy(double accu);
 	double GetAccuracy();
+	void SetFailedCallback(void (*callback)(GODefaultArrow*));
 
 private:
     int disappearing; // is the arrow disappearing?
 	int chainInput; // This has to be 1. If this is 0, the chain is broken prematurely.
 	int chainSuccess; // This is set to 1 when the chain is complete
 	int chainBroken;
+	int chainBrokenAcknowledged;
+	void (*failedCallback)(GODefaultArrow*);
 
 	int colX;
 	double accuracy;
 	GODefaultArrowData attachedData;
 	int xs, ys;		  // (x,y) upon invoking Disappear
 	int hasInput;	  // has already validated a user input
+
 };
 
 class GOPinkFlash : public BL_GameObject
