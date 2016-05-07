@@ -115,7 +115,7 @@ int ArrowList::LoadDefinitionFile(const char* filename)
 	}
 
 	// we check for the id header: PPAD
-	if (fread(&temp, INT_SIZE, 1, file) != 4 || temp != 0x44415050)
+	if (!fread(&temp, INT_SIZE, 1, file) || temp != 0x44415050)
 	{
 		BL_EHLog("ArrowList::LoadDefinitionFile(): Invalid file.\n");
 		goto err;

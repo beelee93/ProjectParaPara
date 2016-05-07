@@ -78,25 +78,6 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 
 	// create arrow list
 	Arena.arrowList = new ArrowList();
-
-	// TEST: A random arrow list
-	ArrowListNode *tempNode = new ArrowListNode();
-	tempNode->timeStamp=5.0f;
-	tempNode->arrows[0].flags |= AD_ENABLED | AD_CHAINED;
-	tempNode->arrows[0].chainDelay = 2.0f;
-	Arena.arrowList->InsertNode(tempNode);
-
-	tempNode = new ArrowListNode();
-	tempNode->timeStamp = 10.0f;
-	tempNode->arrows[4].flags |= AD_ENABLED;
-	Arena.arrowList->InsertNode(tempNode);
-
-    tempNode = new ArrowListNode();
-    tempNode->timeStamp = 15.0f;
-    tempNode->arrows[2].flags |= AD_ENABLED | AD_CHAINED;
-    tempNode->arrows[2].chainDelay = 1.0f;
-    tempNode->arrows[3].flags = AD_ENABLED;
-    Arena.arrowList->InsertNode(tempNode);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -260,6 +241,13 @@ void GameParaPara::OnExitState(GameState leavingState)
     case GS_Arena:
 		audio->StopMusic();
         break;
+
+	case GS_SongSelection:
+		// load arrow list
+		Arena.arrowList->Clear();
+		Arena.arrowList->LoadDefinitionFile(audio->GetMusicInformation(SongSelection.currentSelection)->arrowDef);
+		break;
+
     }
 
     // remove all objects in scene
@@ -320,11 +308,12 @@ void GameParaPara::FadeToGameState(GameState state)
 ///////////////////////////////////////////////////////////////////
 // UPDATE FUNCTIONS
 ///////////////////////////////////////////////////////////////////
-
+static int started = 0;
+static int timeStamps[256] = { 0 };
+static int timeStampIndex = 0;
 void GameParaPara::UpdateMainMenu(double secs)
 {
 	if (fadeMode) return;
-
 	uint8_t inp = input->GetRisingEdge();
 	if (inp & (1 << MainMenu.index))
 	{
@@ -333,9 +322,7 @@ void GameParaPara::UpdateMainMenu(double secs)
 
 		timer = 0.5;
 		if (MainMenu.index >= 5) {
-			//FadeToGameState(GS_SongSelection);
-			// there's only 1 song currently...
-			FadeToGameState(GS_Arena);
+			FadeToGameState(GS_SongSelection);
 		}
 	}
 
@@ -345,6 +332,33 @@ void GameParaPara::UpdateMainMenu(double secs)
 		MainMenu.index = 0;
 		timer = 0;
 	}
+	
+	/*
+	uint8_t inp = input->GetRisingEdge();
+	if (!started)
+	{
+		timer = 0;
+		if (inp & 1) {
+			started = 1;
+			audio->PlayMusic(0);
+		}
+	}
+	else
+	{
+		timer += secs;
+		if (inp & 1) {
+			timeStamps[timeStampIndex++] = (int)(timer * 1000);
+		}
+
+		if (inp & 1<<4) {
+			started = 0;
+			FILE* file = fopen("arrow.txt", "w+");
+			for(int i=0;i<timeStampIndex;i++)
+				fprintf(file, "%d,%d\n", i+1, timeStamps[i]);
+			fclose(file);
+		}
+	}
+	*/
 }
 
 void GameParaPara::UpdateSongSelection(double secs)
@@ -368,9 +382,7 @@ void GameParaPara::UpdateScoreboard(double secs)
 
 		timer = 0.5;
 		if (Scoreboard.index >= 5) {
-			//FadeToGameState(GS_SongSelection);
-			// there's only 1 song currently...
-			FadeToGameState(GS_MainMenu);
+			FadeToGameState(GS_SongSelection);
 		}
 	}
 }
@@ -562,7 +574,7 @@ void ArrowFailureHandler(GODefaultArrow* target)
 	if (health < 0) {
 		health = 0;
 
-		theGame->isVictory = 1;
-		theGame->FadeToGameState(GS_Scoreboard);
+		//theGame->isVictory = 1;
+		//theGame->FadeToGameState(GS_Scoreboard);
 	}
 }

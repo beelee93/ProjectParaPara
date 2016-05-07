@@ -41,7 +41,6 @@ public:
 
 	void InsertNode(ArrowListNode* node);
 
-	// TODO: Implement this
 	int WriteToFile(const char* filename);
 
 protected:
