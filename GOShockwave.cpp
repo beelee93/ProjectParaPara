@@ -10,6 +10,7 @@ GOShockwave::GOShockwave() : BL_GameObject(OBJ_SHOCKWAVE) { }
 // create this object at a position which will be the centre of the shockwave
 void GOShockwave::OnInit(int id, int type, void* data)
 {
+	depth = -5;
     this->sprite = GetSpriteList()->GetSprite(OBJ_SHOCKWAVE);
     firstUpdate = 1;
 	imageScaleX = imageScaleY = 0.1;

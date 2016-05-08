@@ -58,6 +58,8 @@ protected:
 
 	struct {
 		int index;
+		int toggler;
+		double timer;
 	} MainMenu;
 
 	struct {
@@ -70,6 +72,9 @@ protected:
 
 	// input polling
 	InputParaPara* input;
+
+	int targetScore;
+	double score;
 
 	friend void ArrowFailureHandler(GODefaultArrow*);
 };

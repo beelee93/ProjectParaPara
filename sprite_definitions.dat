@@ -3,7 +3,7 @@
 # Format should be easy to follow
 #
 
-COUNT 4
+COUNT 9
 
 # 0 - Default arrows
 SPRITE res/default_arrows.png 5
@@ -28,3 +28,33 @@ RECT 0 0 256 256
 # 3 - Chained back
 SPRITE res/chained_back.png 1
 RECT 0 0 64 64
+
+# 4 - Numbers
+SPRITE res/numbers.png 10
+RECT 0 0 18 23
+RECT 18 0 15 23
+RECT 33 0 17 23
+RECT 50 0 15 23
+RECT 65 0 17 23
+RECT 82 0 16 23
+RECT 98 0 16 23
+RECT 114 0 16 23
+RECT 130 0 16 23
+RECT 146 0 17 23
+
+# 5 - Arena header
+SPRITE res/arenaheader.png 1
+RECT 0 0 800 114
+
+# 6 - Title
+SPRITE res/title.png 2
+RECT 0 0 800 128
+RECT 0 128 800 128
+
+# 7 - Title Sort of
+SPRITE res/sortof.png 1
+RECT 0 0 96 32
+
+# 8 - Heathbar back
+SPRITE res/healthbar.png 1
+RECT 0 0 760 30

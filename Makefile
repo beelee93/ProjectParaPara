@@ -1,9 +1,13 @@
+GAME_OBJS = GODefaultArrow.o GOHeader.o GOPinkFlash.o \
+	GOScore.o GOShockwave.o GOStationaryArrow.o \
+	GOTitle.o
+
 OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameObjectManager.o Sprite.o SpriteLoader.o \
-	   GameParaPara.o GOMParaPara.o GODefaultArrow.o \
-	   GOStationaryArrow.o Main.o SDL_FontCache.o \
-	   RenderQueue.o GOPinkFlash.o Audio.o \
-	   GOShockwave.o ArrowList.o InputParaPara.o 
+	   GameParaPara.o GOMParaPara.o Main.o \
+	   SDL_FontCache.o RenderQueue.o Audio.o \
+	   ArrowList.o InputParaPara.o \
+	   $(GAME_OBJS)
 
 GOH = Globals.h GameObject.h
 NORMAL_LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer 
@@ -21,7 +25,6 @@ CC = g++
 
 install : $(OBJS)
 	$(CC) $(OBJS) $(DIRS) $(LIBS) -o para
-	rm -rf *.o
 
 ErrorHandler.o : ErrorHandler.h ErrorHandler.cpp
 	$(CC) $(CFLAGS) ErrorHandler.cpp
@@ -71,6 +74,15 @@ GOStationaryArrow.o : $(GOH) GOStationaryArrow.cpp
 
 GOPinkFlash.o : $(GOH) GOPinkFlash.cpp
 	$(CC) $(CFLAGS) $(LIBS) GOPinkFlash.cpp
+
+GOHeader.o : $(GOH) GOHeader.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOHeader.cpp
+
+GOTitle.o : $(GOH) GOTitle.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOTitle.cpp
+
+GOScore.o : $(GOH) GOScore.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOScore.cpp
 
 GameParaPara.o : Game.h Globals.h GameParaPara.h GameParaPara.cpp
 	$(CC) $(CFLAGS) $(LIBS) GameParaPara.cpp

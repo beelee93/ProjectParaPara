@@ -17,7 +17,6 @@ static FC_Font* statusFont = NULL;
 
 static double timer = 0;
 
-static double accuracy = 1;
 static GOStationaryArrow* bwArrows[5];
 
 static int health = 100;
@@ -36,6 +35,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeTarget = GS_Null;
 	
 	SongSelection.currentSelection = 0;
+	MainMenu.toggler = 0;
 
     // initialise gom
     gom = new GOMParaPara();
@@ -115,7 +115,7 @@ void GameParaPara::OnUpdate(double secs)
 		timer -= secs;
 		if (timer <= 0)
 		{
-			gameState = GS_MainMenu;
+			ChangeGameState(GS_MainMenu);
 			timer = 0;
 		}
 		break;
@@ -169,21 +169,18 @@ void GameParaPara::OnUpdate(double secs)
 ///////////////////////////////////////////////////////////////////
 void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
 {
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
+	if (objManager) objManager->Render(secs);
     switch(gameState)
     {
     case GS_Arena:
-        SDL_SetRenderDrawColor(renderer,0,0,0,255);
-        SDL_RenderClear(renderer);
-        if(objManager) objManager->Render(secs);
-        FC_Draw(statusFont, renderer, 3,48, "Song time: %f\nAvg Accuracy: %f\nHealth: %d",
-            timer, accuracy, health);
         break;
 
-    default:
-        SDL_SetRenderDrawColor(renderer,0x64,0x95,0xED,255);
-		SDL_RenderClear(renderer);
-        if(objManager) objManager->Render(secs);
-        break;
+	case GS_MainMenu:
+		if(MainMenu.toggler)
+			FC_Draw(statusFont, renderer, 312, 400, "Swipe left to right to begin...");
+		break;
     }
 
 
@@ -194,9 +191,10 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
         SDL_RenderFillRect(renderer, NULL);
     }
 
+	/*
     FC_Draw(statusFont, renderer, 3,3, "FPS: %d\nGameState: %d",
             (int)(1/secs), gameState);
-
+			*/
     SDL_RenderPresent(renderer);
 }
 
@@ -268,14 +266,27 @@ void GameParaPara::OnEnterState(GameState newState)
 	case GS_MainMenu:
 		timer = 0;
 		MainMenu.index = 0;
+		MainMenu.toggler = 0;
+		MainMenu.timer = 0;
 		input->Reset();
+
+		// create title
+		gom->CreateObject(OBJ_TITLE);
+
 		break;
     case GS_Arena:
 		health = 100;
-		accuracy = 1.0;
         timer = 2.0;
         Arena.arenaStarted = 0;
 		input->Reset();
+		score = 0;
+		targetScore = 0;
+
+		// create header
+		gom->CreateObject(OBJ_HEADER, &health);
+
+		// create score
+		gom->CreateObject(OBJ_SCORE, &score);
         break;
 
 	case GS_Scoreboard:
@@ -313,6 +324,13 @@ static int timeStamps[256] = { 0 };
 static int timeStampIndex = 0;
 void GameParaPara::UpdateMainMenu(double secs)
 {
+	MainMenu.timer += secs;
+	if (MainMenu.timer > 1)
+	{
+		MainMenu.timer = 0;
+		MainMenu.toggler ^= 1;
+	}
+
 	if (fadeMode) return;
 	uint8_t inp = input->GetRisingEdge();
 	if (inp & (1 << MainMenu.index))
@@ -389,7 +407,7 @@ void GameParaPara::UpdateScoreboard(double secs)
 
 void GameParaPara::UpdateArena(double secs)
 {
-	int tempArenaX, tempArenaY, maskedInput;
+	int tempArenaX, tempArenaY;
 	double timeDiff;
 	BL_GameObject* tempObj;
 	GODefaultArrow* tempArrow;
@@ -494,7 +512,13 @@ void GameParaPara::UpdateArena(double secs)
 				if (tempArrow->HasInput())
 				{
 					// provide input to arrow
-					tempArrow->FlagForChain(currInput & (1 << tempArenaX));
+					if (currInput & (1 << tempArenaX))
+					{
+						tempArrow->FlagForChain(1);
+						targetScore += (int)(500 * tempArrow->GetAccuracy() * secs);
+					}
+					else
+						tempArrow->FlagForChain(0);
 				}
 				else if ((riseKey & (1 << tempArenaX)) != 0) // arrow has not been activated
 				{
@@ -510,8 +534,7 @@ void GameParaPara::UpdateArena(double secs)
 				if (tempArrow->GetChainSuccess())
 				{
 					// arrow chain success
-					accuracy += tempArrow->GetAccuracy();
-					accuracy /= 2;
+					targetScore += (int)(tempArrow->GetAccuracy()*2000 * secs);
 
 					// make arrow disappear
 					if(!tempArrow->IsDisappearing())
@@ -542,9 +565,7 @@ void GameParaPara::UpdateArena(double secs)
 				// has not fully disappeared
 				if (tempArrow->alpha > 0.2)
 				{
-					accuracy += 1 - (
-						(tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0;
-					accuracy /= 2;
+					targetScore += (int)((1 - ((tempArrow->y > 64 ? tempArrow->y : 64) - 64) / 64.0) * 1000 * secs);
 
 					// make it disappear
 					tempArrow->y = bwArrows[tempArenaX]->y;
@@ -562,19 +583,28 @@ void GameParaPara::UpdateArena(double secs)
 			}
 
 		}
+
+		// update score
+		double diff;
+		if (score < targetScore)
+		{
+			diff = targetScore - score;
+			if (diff < 50) diff = 50;
+			score += diff * secs;
+			if (score > targetScore) score = targetScore;
+		}
 	}
 }
 
 // Handles arrow failures
 void ArrowFailureHandler(GODefaultArrow* target)
 {
-	accuracy /= 2;
-	health -= 30;
+	health -= 5;
 
 	if (health < 0) {
 		health = 0;
 
-		//theGame->isVictory = 1;
-		//theGame->FadeToGameState(GS_Scoreboard);
+		theGame->isVictory = 0;
+		theGame->FadeToGameState(GS_Scoreboard);
 	}
 }

@@ -10,6 +10,7 @@ GOStationaryArrow::GOStationaryArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS_BW) {}
 
 void GOStationaryArrow::OnInit(int id, int type, void* data)
 {
+	depth = 5;
     // set the sprite
     this->sprite = GetSpriteList()->GetSprite(OBJ_DEFAULT_ARROWS_BW);
     this->imageIndex = data? *((int*)data) : rand() % 5;

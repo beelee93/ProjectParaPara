@@ -16,6 +16,13 @@
 #define OBJ_DEFAULT_ARROWS_BW   1
 #define OBJ_SHOCKWAVE           2
 #define SPR_CHAINED_BACK		3 /* Not used as object */
+#define SPR_NUMBERS				4
+#define OBJ_HEADER				5
+#define OBJ_TITLE				6
+#define SPR_SORT_OF				7
+#define SPR_HEALTHBAR			8
+
+#define OBJ_SCORE				9001
 #define OBJ_PINK_FLASH          9000
 
 
@@ -47,7 +54,7 @@ public:
 
 /////// Objects Classes ////////
 #define ARROW_TARGET_Y  64
-#define ARROW_SPEED     200
+#define ARROW_SPEED     300
 #define FlightTime      ((600.0 - ARROW_TARGET_Y) / (ARROW_SPEED))
 
 #define HIBITS(x) ( x>>4 )
@@ -130,5 +137,44 @@ private:
     int firstUpdate;
     double xstart, ystart;
 	float scaler;
+};
+
+class GOTitle : public BL_GameObject
+{
+public:
+	GOTitle();
+	void OnInit(int id, int type, void* data = NULL);
+	void OnUpdate(double secs);
+	void OnRender(double secs, SDL_Renderer* renderer);
+
+private:
+	double timer = 0;
+	double backAlpha = 0;
+	BL_Sprite* sortOfSprite;
+};
+
+class GOScore : public BL_GameObject
+{
+public:
+	GOScore();
+	void OnInit(int id, int type, void* data = NULL);
+	void OnRender(double secs, SDL_Renderer* renderer);
+
+private:
+	double* score;
+
+};
+
+class GOHeader : public BL_GameObject
+{
+public:
+	GOHeader();
+	void OnInit(int id, int type, void* data = NULL);
+	void OnRender(double secs, SDL_Renderer* renderer);
+
+private: 
+	int* health;
+	BL_Sprite* barSprite;
+	SDL_Rect drawRect;
 };
 #endif // RESOURCE_H_INCLUDED

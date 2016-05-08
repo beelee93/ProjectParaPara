@@ -23,6 +23,14 @@ BL_GameObject* GOMParaPara::OnCreateObject(int type)
         case OBJ_PINK_FLASH:
             return new GOPinkFlash();
 
+		case OBJ_TITLE:
+			return new GOTitle();
+
+		case OBJ_SCORE:
+			return new GOScore();
+
+		case OBJ_HEADER:
+			return new GOHeader();
         default:
             BL_EHLog("GOMParaPara::OnCreateObject(): No such object defined.");
             break;

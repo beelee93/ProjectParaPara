@@ -46,10 +46,11 @@ void BL_RenderQueue::QueueObject(BL_GameObject* obj)
     {
         // we recycle inactive nodes from its head node
         node = queueHeads[INACTIVE];
-        node->next = NULL;
 
-        // move the queue head down the line
-        queueHeads[INACTIVE] = node->next;
+		// move the queue head down the line
+		queueHeads[INACTIVE] = node->next;
+
+        node->next = NULL;
     }
     node->item = obj;
 

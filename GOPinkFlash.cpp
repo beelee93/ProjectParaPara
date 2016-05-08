@@ -20,7 +20,7 @@ void GOPinkFlash::OnInit(int id, int type, void* data)
    drawRect.w = 64;
    drawRect.h = 600;
 
-   depth = 1;
+   depth = 10;
 }
 
 void GOPinkFlash::OnUpdate(double secs)
