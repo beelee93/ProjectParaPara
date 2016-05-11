@@ -4,6 +4,8 @@ GOTitle::GOTitle() : BL_GameObject(OBJ_TITLE) {}
 
 void GOTitle::OnInit(int id, int type, void* data) 
 {
+	timer = 0;
+	backAlpha = 0;
 	this->sprite = GetSpriteList()->GetSprite(OBJ_TITLE);
 	this->sortOfSprite = GetSpriteList()->GetSprite(SPR_SORT_OF);
 	this->imageSpeed = 0;

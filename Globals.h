@@ -148,8 +148,8 @@ public:
 	void OnRender(double secs, SDL_Renderer* renderer);
 
 private:
-	double timer = 0;
-	double backAlpha = 0;
+	double timer;
+	double backAlpha;
 	BL_Sprite* sortOfSprite;
 };
 
