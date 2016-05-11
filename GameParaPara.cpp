@@ -20,8 +20,11 @@ static double timer = 0;
 static GOStationaryArrow* bwArrows[5];
 
 static int health = 100;
+static int useRPI = 0;
 
 static GameParaPara* theGame = NULL;
+
+void ArrowFailureHandler(GODefaultArrow*);
 
 ///////////////////////////////////////////////////////////////////
 GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
@@ -34,7 +37,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeMode = 0;
     fadeTarget = GS_Null;
 	
-	SongSelection.currentSelection = 0;
+	SongSelection.currentSelection = 1;
 	MainMenu.toggler = 0;
 
     // initialise gom
@@ -78,6 +81,10 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 
 	// create arrow list
 	Arena.arrowList = new ArrowList();
+
+#ifdef RPI
+	useRPI = 1;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -220,9 +227,11 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
 					else if (gameState == GS_Scoreboard)
 						FadeToGameState(GS_SongSelection);
                     break;
-                case SDLK_a:
-                    GetObjectManager()->CreateObject(OBJ_DEFAULT_ARROWS);
-                    break;
+				case SDLK_F10: // toggle rpi gpio pins usage
+#ifdef RPI
+					useRPI = ~useRPI;
+#endif
+					break;
 
             }
             break;
@@ -319,9 +328,14 @@ void GameParaPara::FadeToGameState(GameState state)
 ///////////////////////////////////////////////////////////////////
 // UPDATE FUNCTIONS
 ///////////////////////////////////////////////////////////////////
+//#define EDITOR
+#ifdef EDITOR
 static int started = 0;
 static int timeStamps[256] = { 0 };
 static int timeStampIndex = 0;
+#endif
+
+
 void GameParaPara::UpdateMainMenu(double secs)
 {
 	MainMenu.timer += secs;
@@ -331,8 +345,9 @@ void GameParaPara::UpdateMainMenu(double secs)
 		MainMenu.toggler ^= 1;
 	}
 
+#ifndef EDITOR
 	if (fadeMode) return;
-	uint8_t inp = input->GetRisingEdge();
+	uint8_t inp = input->GetRisingEdge(useRPI);
 	if (inp & (1 << MainMenu.index))
 	{
 		MainMenu.index++;
@@ -351,14 +366,14 @@ void GameParaPara::UpdateMainMenu(double secs)
 		timer = 0;
 	}
 	
-	/*
-	uint8_t inp = input->GetRisingEdge();
+#else
+	uint8_t inp = input->GetRisingEdge(useRPI);
 	if (!started)
 	{
 		timer = 0;
 		if (inp & 1) {
 			started = 1;
-			audio->PlayMusic(0);
+			audio->PlayMusic(1);
 		}
 	}
 	else
@@ -376,7 +391,7 @@ void GameParaPara::UpdateMainMenu(double secs)
 			fclose(file);
 		}
 	}
-	*/
+#endif
 }
 
 void GameParaPara::UpdateSongSelection(double secs)
@@ -392,7 +407,7 @@ void GameParaPara::UpdateScoreboard(double secs)
 {
 	if (fadeMode) return;
 
-	uint8_t inp = input->GetRisingEdge();
+	uint8_t inp = input->GetRisingEdge(useRPI);
 	if (inp & (1 << Scoreboard.index))
 	{
 		Scoreboard.index++;
@@ -426,7 +441,7 @@ void GameParaPara::UpdateArena(double secs)
 			Arena.arenaStarted = 1;
 
 			// play arena song
-			audio->PlayMusic(0);
+			audio->PlayMusic(SongSelection.currentSelection);
 			timer = 0;
 
 			// reset arrow list node pointer
@@ -480,8 +495,8 @@ void GameParaPara::UpdateArena(double secs)
 		}
 
 		// Poll input
-		riseKey = input->GetRisingEdge();
-		currInput = input->GetCurrentInput();
+		riseKey = input->GetRisingEdge(useRPI);
+		currInput = input->GetCurrentInput(useRPI);
 
 		// look for flying arrows
 		tempRect.x = 208;

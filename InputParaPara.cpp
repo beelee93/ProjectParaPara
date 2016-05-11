@@ -10,6 +10,8 @@ InputParaPara::InputParaPara()
 	this->currInput = this->prevInput = 0;
 #ifdef RPI
 	wiringPiSetup();
+	for(int i=0;i<5;i++)
+		pinMode(i, INPUT);
 #endif
 }
 
