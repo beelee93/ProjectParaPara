@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-GOPinkFlash::GOPinkFlash() : BL_GameObject(OBJ_PINK_FLASH) {}
+GOPinkFlash::GOPinkFlash() : GameObject(OBJ_PINK_FLASH) {}
 
 void GOPinkFlash::OnInit(int id, int type, void* data)
 {

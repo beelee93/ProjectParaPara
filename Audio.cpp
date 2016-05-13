@@ -8,7 +8,7 @@
 static char errMsg[256] = "";
 
 // ctor
-BL_Audio::BL_Audio()
+Audio::Audio()
 {
 	initialised = 0;
 	musicInfo = NULL;
@@ -17,20 +17,20 @@ BL_Audio::BL_Audio()
 	int b = Mix_Init(MIX_INIT_OGG | MIX_INIT_MP3);
 	if ((b & MIX_INIT_OGG) == 0 || (b & MIX_INIT_MP3) == 0)
 	{
-		BL_EHLog("BL_Audio::ctor(): Mix_Init failed.\n");
+		EHLog("Audio::ctor(): Mix_Init failed.\n");
 		return;
 	}
 
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
 	{
-		BL_EHLog("BL_Audio::ctor(): Mix_OpenAudio failed.\n");
+		EHLog("Audio::ctor(): Mix_OpenAudio failed.\n");
 		return;
 	}
 
 	chunks = (Mix_Chunk**) malloc(sizeof(Mix_Chunk*) * 10);
 	if (!chunks)
 	{
-		BL_EHLog("BL_Audio::ctor(): Cannot malloc chunk list.\n");
+		EHLog("Audio::ctor(): Cannot malloc chunk list.\n");
 		return;
 	}
 	SDL_memset(chunks, 0, sizeof(Mix_Chunk*) * 10);
@@ -40,7 +40,7 @@ BL_Audio::BL_Audio()
 	musicInfo = (MusicInformation*)malloc(sizeof(MusicInformation) * 10);
 	if (!musicInfo)
 	{
-		BL_EHLog("BL_Audio::ctor(): Cannot malloc music list.\n");
+		EHLog("Audio::ctor(): Cannot malloc music list.\n");
 		return;
 	}
 	SDL_memset(musicInfo, 0, sizeof(MusicInformation) * 10);
@@ -52,7 +52,7 @@ BL_Audio::BL_Audio()
 	initialised = 1;
 }
 
-void BL_Audio::PurgeMusic()
+void Audio::PurgeMusic()
 {
 	if (!musicInfo) return;
 
@@ -69,7 +69,7 @@ void BL_Audio::PurgeMusic()
 	musicCount = 0;
 }
 
-void BL_Audio::PurgeSound()
+void Audio::PurgeSound()
 {
 	if (!chunks) return;
 
@@ -86,7 +86,7 @@ void BL_Audio::PurgeSound()
 	chunkCount = 0;
 }
 
-int BL_Audio::AddMusic(const char* filename, const char* name, double length, const char* arrowDef)
+int Audio::AddMusic(const char* filename, const char* name, double length, const char* arrowDef)
 {
 	if (!filename) return -1;
 	if (!initialised) return -1;
@@ -95,7 +95,7 @@ int BL_Audio::AddMusic(const char* filename, const char* name, double length, co
 	if (!mus)
 	{
 		sprintf(errMsg, "AddMusic(): Cannot load music file '%s'.\n", filename);
-		BL_EHLog(errMsg);
+		EHLog(errMsg);
 		return -1;
 	}
 
@@ -120,7 +120,7 @@ int BL_Audio::AddMusic(const char* filename, const char* name, double length, co
 	return musicCount - 1;
 }
 
-int BL_Audio::AddSound(const char* filename)
+int Audio::AddSound(const char* filename)
 {
 	if (!filename) return -1;
 	if (!initialised) return -1;
@@ -129,7 +129,7 @@ int BL_Audio::AddSound(const char* filename)
 	if (!mus)
 	{
 		sprintf(errMsg, "AddSound(): Cannot load sound file '%s'.\n", filename);
-		BL_EHLog(errMsg);
+		EHLog(errMsg);
 		return -1;
 	}
 
@@ -149,7 +149,7 @@ int BL_Audio::AddSound(const char* filename)
 	return chunkCount - 1;
 }
 
-void BL_Audio::PlayMusic(int index)
+void Audio::PlayMusic(int index)
 {
 	if (!initialised) return;
 	if (index < 0 || index >= musicCapacity) return;
@@ -160,7 +160,26 @@ void BL_Audio::PlayMusic(int index)
 	currentMusic = index;
 }
 
-void  BL_Audio::StopMusic()
+void Audio::PauseMusic()
+{
+	if (!initialised) return;
+	if (currentMusic > -1)
+	{
+		Mix_PauseMusic();
+	}
+}
+
+void Audio::RestartMusic()
+{
+	if (!initialised) return;
+	if (currentMusic > -1)
+	{
+		Mix_RewindMusic();
+		Mix_ResumeMusic();
+	}
+}
+
+void  Audio::StopMusic()
 {
 	if (currentMusic > -1)
 	{
@@ -169,12 +188,12 @@ void  BL_Audio::StopMusic()
 	}
 }
 
-int BL_Audio::GetInitialised()
+int Audio::GetInitialised()
 {
 	return initialised;
 }
 
-void BL_Audio::PlaySound(int index)
+void Audio::PlaySound(int index)
 {
 	if (!initialised) return;
 	if (index < 0 || index >= chunkCapacity) return;
@@ -182,7 +201,7 @@ void BL_Audio::PlaySound(int index)
 	Mix_PlayChannel(-1, chunks[index], 0);
 }
 
-BL_Audio::~BL_Audio()
+Audio::~Audio()
 {
 	StopMusic();
 
@@ -199,7 +218,7 @@ BL_Audio::~BL_Audio()
 	Mix_Quit();
 }
 
-int BL_Audio::LoadMusicList(const char* filename, BL_Audio* audio)
+int Audio::LoadMusicList(const char* filename, Audio* audio)
 {
 	int songCount;
 	int i;
@@ -216,7 +235,7 @@ int BL_Audio::LoadMusicList(const char* filename, BL_Audio* audio)
 	if (!file)
 	{
 		sprintf(errMsg, "LoadMusicList(): Cannot load music list '%s'.\n", filename);
-		BL_EHLog(errMsg);
+		EHLog(errMsg);
 		return 0;
 	}
 
@@ -234,7 +253,7 @@ int BL_Audio::LoadMusicList(const char* filename, BL_Audio* audio)
 	return 1;
 }
 
-MusicInformation* BL_Audio::GetMusicInformation(int index)
+MusicInformation* Audio::GetMusicInformation(int index)
 {
 	if (!initialised) return NULL;
 	if (index<0 || index>=musicCount) return NULL;
@@ -242,11 +261,11 @@ MusicInformation* BL_Audio::GetMusicInformation(int index)
 	return &musicInfo[index];
 }
 
-MusicInformation* BL_Audio::GetCurrentMusic()
+MusicInformation* Audio::GetCurrentMusic()
 {
 	return GetMusicInformation(currentMusic);
 }
 
-int BL_Audio::GetMusicCount() {
+int Audio::GetMusicCount() {
 	return musicCount;
 }

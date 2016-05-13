@@ -11,7 +11,7 @@
 // the null object, that has no sprite and does nothing
 #define OBJ_NULL        -1
 
-class BL_GameObject
+class GameObject
 {
 public:
     int type;               // a unique type id
@@ -46,11 +46,11 @@ public:
     int visible;            // will this object be drawn?
 
 
-    BL_Sprite* sprite;      // pointer to sprite associated with this object
+    Sprite* sprite;      // pointer to sprite associated with this object
                             // can be NULL for no sprite
 
-    BL_GameObject(int type);
-    virtual ~BL_GameObject();
+    GameObject(int type);
+    virtual ~GameObject();
 
     // Be sure to call parent's functions
     virtual void OnInit(int id, int type, void* data=NULL);  // you may set your sprite here

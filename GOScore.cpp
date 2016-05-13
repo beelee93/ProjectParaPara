@@ -2,7 +2,7 @@
 
 static int sizes[] = { 18, 15, 17, 15, 17, 16, 16, 16, 16, 17 };
 
-GOScore::GOScore() : BL_GameObject(OBJ_SCORE) { }
+GOScore::GOScore() : GameObject(OBJ_SCORE) { }
 
 void GOScore::OnInit(int id, int type, void* data)
 {

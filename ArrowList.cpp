@@ -110,14 +110,14 @@ int ArrowList::LoadDefinitionFile(const char* filename)
 	file = fopen(filename, "rb");
 	if (!file)
 	{
-		BL_EHLog("ArrowList::LoadDefinitionFile(): Cannot load specified file.\n");
+		EHLog("ArrowList::LoadDefinitionFile(): Cannot load specified file.\n");
 		return 0;
 	}
 
 	// we check for the id header: PPAD
 	if (!fread(&temp, INT_SIZE, 1, file) || temp != 0x44415050)
 	{
-		BL_EHLog("ArrowList::LoadDefinitionFile(): Invalid file.\n");
+		EHLog("ArrowList::LoadDefinitionFile(): Invalid file.\n");
 		goto err;
 	}
 
@@ -202,7 +202,7 @@ int ArrowList::WriteToFile(const char* filename)
     file = fopen(filename, "wb+");
     if(!file)
     {
-        BL_EHLog("ArrowList::WriteToFile(): Cannot open file for writing.\n");
+        EHLog("ArrowList::WriteToFile(): Cannot open file for writing.\n");
         return 0;
     }
 

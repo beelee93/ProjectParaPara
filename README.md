@@ -26,7 +26,7 @@ Contains the main entry point of the application.
 
 ###Game.cpp
 
-Implementation of a basic BL_Game class, that
+Implementation of a basic Game class, that
 will support the creation of the game window
 and the main game loop.
 Inherit this class to customise the update

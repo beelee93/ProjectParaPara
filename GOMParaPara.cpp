@@ -5,9 +5,9 @@
 
 #include "Globals.h"
 
-GOMParaPara::GOMParaPara() : BL_GOM() { }
+GOMParaPara::GOMParaPara() : GOM() { }
 
-BL_GameObject* GOMParaPara::OnCreateObject(int type)
+GameObject* GOMParaPara::OnCreateObject(int type)
 {
     switch(type)
     {
@@ -31,10 +31,14 @@ BL_GameObject* GOMParaPara::OnCreateObject(int type)
 
 		case OBJ_HEADER:
 			return new GOHeader();
+
+		case OBJ_FONTSHEET:
+			return new GOFontSheet();
+
         default:
-            BL_EHLog("GOMParaPara::OnCreateObject(): No such object defined.");
+            EHLog("GOMParaPara::OnCreateObject(): No such object defined.");
             break;
     }
 
-    return BL_GOM::OnCreateObject(type);
+    return GOM::OnCreateObject(type);
 }

@@ -5,7 +5,10 @@
 #include "ArrowList.h"
 
 #define SND_BEEP 0
+#define SND_SELECT 1
+#define SND_CONFIRM 2
 
+class GOFontSheet;
 class GODefaultArrow;
 
 enum GameState {
@@ -14,11 +17,12 @@ enum GameState {
 	GS_MainMenu,            /* Press a button to begin */
 	GS_SongSelection,       /* Menu to select songs */
 	GS_Arena,               /* Main playing screen */
-	GS_Scoreboard          /* Results and score */
+	GS_Scoreboard,          /* Results and score */
+	GS_Calibration			/* To check if inputs are working */
 };
 
 /////// Inherited Game ////////
-class GameParaPara : public BL_Game
+class GameParaPara : public Game
 {
 public:
 	GameParaPara(int, char**);
@@ -38,6 +42,7 @@ public:
 	void UpdateSongSelection(double secs);
 	void UpdateMainMenu(double secs);
 	void UpdateScoreboard(double secs);
+	void UpdateCalibration(double secs);
 
 protected:
 	GameState gameState;
@@ -64,11 +69,17 @@ protected:
 
 	struct {
 		int currentSelection;
+		GOFontSheet* songText;
+		double timer;
 	} SongSelection;
 
 	struct {
 		int index;
 	} Scoreboard;
+
+	struct {
+		int started;
+	} Calibration;
 
 	// input polling
 	InputParaPara* input;

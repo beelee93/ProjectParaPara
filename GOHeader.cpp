@@ -1,6 +1,6 @@
 #include "Globals.h"
 
-GOHeader::GOHeader() : BL_GameObject(OBJ_HEADER) { }
+GOHeader::GOHeader() : GameObject(OBJ_HEADER) { }
 
 void GOHeader::OnInit(int id, int type, void* data)
 {
@@ -23,7 +23,7 @@ void GOHeader::OnRender(double secs, SDL_Renderer* renderer)
 	if (!visible || destroyFlag || !health) return;
 
 	// render usual
-	BL_GameObject::OnRender(secs, renderer);
+	GameObject::OnRender(secs, renderer);
 
 	// render bar
 	double percentage = (*health) / 100.0;

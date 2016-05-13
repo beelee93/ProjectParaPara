@@ -1,6 +1,6 @@
 #include "Globals.h"
 
-GOTitle::GOTitle() : BL_GameObject(OBJ_TITLE) {}
+GOTitle::GOTitle() : GameObject(OBJ_TITLE) {}
 
 void GOTitle::OnInit(int id, int type, void* data) 
 {
@@ -31,7 +31,7 @@ void GOTitle::OnRender(double secs, SDL_Renderer* renderer)
 	this->sprite->Render(1, x, y, 800, 128, 0, NULL, SDL_FLIP_NONE);
 
 	// Render the usual
-	BL_GameObject::OnRender(secs, renderer);
+	GameObject::OnRender(secs, renderer);
 
 	if (timer > 2)
 	{

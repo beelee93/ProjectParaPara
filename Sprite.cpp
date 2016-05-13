@@ -11,7 +11,7 @@ static SDL_Rect srcRectTemp;
 
 static char msg[512] = "";
 
-BL_Sprite::BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCount)
+Sprite::Sprite(SDL_Renderer* renderer, const char* filename, int elementCount)
 {
     this->renderer = renderer;
     this->elemCount = elementCount;
@@ -20,8 +20,8 @@ BL_Sprite::BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCo
 
     if(!surface)
     {
-        sprintf(msg, "BL_Sprite(): Cannot load '%s'\n", filename);
-        BL_EHLog(msg);
+        sprintf(msg, "Sprite(): Cannot load '%s'\n", filename);
+        EHLog(msg);
         goto err;
     }
 
@@ -30,8 +30,8 @@ BL_Sprite::BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCo
 
     if(!(this->texture))
     {
-        sprintf(msg, "BL_Sprite(): Cannot create texture '%s'\n", filename);
-        BL_EHLog(msg);
+        sprintf(msg, "Sprite(): Cannot create texture '%s'\n", filename);
+        EHLog(msg);
         goto err;
     }
 
@@ -41,8 +41,8 @@ BL_Sprite::BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCo
 
     if(srcRects == NULL)
     {
-        sprintf(msg, "BL_Sprite(): Cannot alloc srcRects '%s'\n", filename);
-        BL_EHLog(msg);
+        sprintf(msg, "Sprite(): Cannot alloc srcRects '%s'\n", filename);
+        EHLog(msg);
 
         SDL_DestroyTexture(texture);
         texture = NULL;
@@ -57,7 +57,7 @@ err:
 }
 
 // dtor
-BL_Sprite::~BL_Sprite()
+Sprite::~Sprite()
 {
     if(texture)
     {
@@ -73,7 +73,7 @@ BL_Sprite::~BL_Sprite()
 }
 
 // Renders the sprite using the specified renderer and properties
-void BL_Sprite::Render(int elemIndex, int dx, int dy, int dw, int dh,
+void Sprite::Render(int elemIndex, int dx, int dy, int dw, int dh,
                        double angle, SDL_Point* center, SDL_RendererFlip flip)
 {
     destRect.x=dx;
@@ -85,7 +85,7 @@ void BL_Sprite::Render(int elemIndex, int dx, int dy, int dw, int dh,
 }
 
 // Renders the clipped part of the specified element. Source dimensions are relative to the element.
-void BL_Sprite::RenderClipped(int elemIndex, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh,
+void Sprite::RenderClipped(int elemIndex, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh,
 	double angle, SDL_Point* center, SDL_RendererFlip flip)
 {
 	srcRectTemp = srcRects[elemIndex];
@@ -101,7 +101,7 @@ void BL_Sprite::RenderClipped(int elemIndex, int sx, int sy, int sw, int sh, int
 		&destRect, angle, center, flip);
 }
 
-void BL_Sprite::SetRect(int elemIndex, int x, int y, int w, int h)
+void Sprite::SetRect(int elemIndex, int x, int y, int w, int h)
 {
     if(elemIndex < elemCount && elemIndex>=0)
     {
@@ -111,22 +111,22 @@ void BL_Sprite::SetRect(int elemIndex, int x, int y, int w, int h)
         srcRects[elemIndex].h=h;
     }
     else
-        BL_EHLog("BL_Sprite::SetRect(): Index out of bounds.\n");
+        EHLog("Sprite::SetRect(): Index out of bounds.\n");
 }
 
-int BL_Sprite::GetCount()
+int Sprite::GetCount()
 {
     return elemCount;
 }
-SDL_Texture* BL_Sprite::GetTexture()
+SDL_Texture* Sprite::GetTexture()
 {
     return texture;
 }
-SDL_Rect BL_Sprite::GetRect(int elem)
+SDL_Rect Sprite::GetRect(int elem)
 {
     return srcRects[elem];
 }
-int BL_Sprite::GetInitialised()
+int Sprite::GetInitialised()
 {
     return initialised;
 }

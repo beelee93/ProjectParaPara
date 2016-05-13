@@ -9,16 +9,16 @@
 #include <stdio.h>
 
 // Initialises the error logger
-void BL_EHInit();
+void EHInit();
 
 // Logs the message
-void BL_EHLog(const char* str);
+void EHLog(const char* str);
 
 // Flushes to output
-void BL_EHFlush();
+void EHFlush();
 
 // Clean up
-void BL_EHQuit();
+void EHQuit();
 
 
 #endif // ERRORHANDLER_H_INCLUDED

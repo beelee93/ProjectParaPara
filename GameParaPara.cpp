@@ -12,7 +12,7 @@
 #define SYSFONT "/usr/share/fonts/truetype/freefont/FreeMono.ttf"
 #endif
 
-static BL_GOM* gom = NULL;
+static GOM* gom = NULL;
 static FC_Font* statusFont = NULL;
 
 static double timer = 0;
@@ -27,7 +27,7 @@ static GameParaPara* theGame = NULL;
 void ArrowFailureHandler(GODefaultArrow*);
 
 ///////////////////////////////////////////////////////////////////
-GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
+GameParaPara::GameParaPara(int argc, char** argv) : Game(argc, argv)
 {
 	theGame = this;
 
@@ -38,6 +38,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     fadeTarget = GS_Null;
 	
 	SongSelection.currentSelection = 1;
+	SongSelection.songText = NULL;
 	MainMenu.toggler = 0;
 
     // initialise gom
@@ -55,7 +56,7 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
     if(!statusFont)
     {
         this->initialised = 0;
-        BL_EHLog("GameParaPara(): Failed to create font.\n");
+        EHLog("GameParaPara(): Failed to create font.\n");
         return;
     }
 
@@ -65,16 +66,18 @@ GameParaPara::GameParaPara(int argc, char** argv) : BL_Game(argc, argv)
 
 	if (initialised)
 	{
-		if (!BL_Audio::LoadMusicList("music.dat", audio))
+		if (!Audio::LoadMusicList("music.dat", audio))
 		{
 			this->initialised = 0;
-			BL_EHLog("GameParaPara(): Failed to load music list.\n");
+			EHLog("GameParaPara(): Failed to load music list.\n");
 			return;
 		}
 	}
 
 	// load sounds
 	/* 0 */ audio->AddSound("res/beep.wav");
+	/* 1 */ audio->AddSound("res/music-select.wav");
+	/* 2 */ audio->AddSound("res/music-confirm.wav");
 
 	// create new input system
 	input = new InputParaPara();
@@ -108,7 +111,7 @@ GameParaPara::~GameParaPara()
 ///////////////////////////////////////////////////////////////////
 void GameParaPara::OnUpdate(double secs)
 {
-    BL_Game::OnUpdate(secs);
+    Game::OnUpdate(secs);
 
 	// Poll inputs
 	input->Update();
@@ -144,6 +147,10 @@ void GameParaPara::OnUpdate(double secs)
 
 	case GS_Scoreboard: 
 		UpdateScoreboard(secs);
+		break;
+
+	case GS_Calibration:
+		UpdateCalibration(secs);
 		break;
 
 	}
@@ -209,7 +216,7 @@ void GameParaPara::OnRender(SDL_Renderer* renderer, double secs)
 ///////////////////////////////////////////////////////////////////
 void GameParaPara::OnEvent(SDL_Event* event, double secs)
 {
-    BL_Game::OnEvent(event, secs);
+    Game::OnEvent(event, secs);
 
     switch(event->type)
     {
@@ -223,14 +230,25 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
 					else if (gameState == GS_Arena)
 						FadeToGameState(GS_SongSelection);
 					else if (gameState == GS_SongSelection)
+					{
+						audio->StopMusic();
+						SongSelection.songText = NULL;
 						FadeToGameState(GS_MainMenu);
+					}
 					else if (gameState == GS_Scoreboard)
-						FadeToGameState(GS_SongSelection);
+						FadeToGameState(GS_MainMenu);
                     break;
 				case SDLK_F10: // toggle rpi gpio pins usage
 #ifdef RPI
 					useRPI = ~useRPI;
 #endif
+					break;
+
+				case SDLK_F9:
+					if (gameState == GS_MainMenu)
+						ChangeGameState(GS_Calibration);
+					else if (gameState == GS_Calibration)
+						ChangeGameState(GS_MainMenu);
 					break;
 
             }
@@ -266,6 +284,7 @@ void GameParaPara::OnExitState(GameState leavingState)
 // current state
 void GameParaPara::OnEnterState(GameState newState)
 {
+	GameObject* temp1;
     switch(newState)
     {
     case GS_Splash:
@@ -283,6 +302,20 @@ void GameParaPara::OnEnterState(GameState newState)
 		gom->CreateObject(OBJ_TITLE);
 
 		break;
+
+	case GS_SongSelection:
+		SongSelection.currentSelection = 0;
+		temp1 = objManager->CreateObject(OBJ_FONTSHEET, "Select Song");
+		((GOFontSheet*)temp1)->SetCentered(1);
+		temp1->x = 400;
+		temp1->y = 10;
+		SongSelection.songText = (GOFontSheet*)objManager->CreateObject(OBJ_FONTSHEET, audio->GetMusicInformation(0)->name);
+		SongSelection.songText->x = 400;
+		SongSelection.songText->y = 280;
+		SongSelection.songText->SetCentered(1);
+		SongSelection.timer = 0;
+		break;
+
     case GS_Arena:
 		health = 100;
         timer = 2.0;
@@ -297,6 +330,10 @@ void GameParaPara::OnEnterState(GameState newState)
 		// create score
 		gom->CreateObject(OBJ_SCORE, &score);
         break;
+
+	case GS_Calibration:
+		Calibration.started = 0;
+		break;
 
 	case GS_Scoreboard:
 		Scoreboard.index = 0;
@@ -396,9 +433,56 @@ void GameParaPara::UpdateMainMenu(double secs)
 
 void GameParaPara::UpdateSongSelection(double secs)
 {
-	const uint8_t* k = SDL_GetKeyboardState(NULL);
-	if (k[SDL_SCANCODE_RETURN])
+	if (SongSelection.timer < 1 && fadeMode != FM_FADE_OUT)
 	{
+		SongSelection.timer += secs;
+		if (SongSelection.timer >= 1)
+			audio->PlayMusic(0);
+	}
+
+	if (fadeMode) return;
+
+	int changed = 0;
+	uint8_t inp = input->GetRisingEdge(useRPI);
+	if (inp & 1) // To left
+	{
+		audio->PlaySound(SND_SELECT);
+		audio->StopMusic();
+		SongSelection.currentSelection--;
+
+		if (SongSelection.currentSelection < 0)
+			SongSelection.currentSelection = audio->GetMusicCount() - 1;
+
+		changed = 1;
+
+	}
+	else if (inp & 16) // To right
+	{
+		audio->PlaySound(SND_SELECT);
+		audio->StopMusic();
+		SongSelection.currentSelection++;
+
+		if (SongSelection.currentSelection >= audio->GetMusicCount())
+			SongSelection.currentSelection = 0;
+
+		changed = 1;
+	}
+
+	if (changed)
+	{
+		// play the newly selected music
+		audio->PlayMusic(SongSelection.currentSelection);
+
+		// set the text
+		if (SongSelection.songText)
+			SongSelection.songText->SetString(audio->GetCurrentMusic()->name);
+	}
+	
+
+	if (inp & 4) // center
+	{
+		audio->PlaySound(SND_CONFIRM);
+		audio->PauseMusic();
 		FadeToGameState(GS_Arena);
 	}
 }
@@ -420,11 +504,42 @@ void GameParaPara::UpdateScoreboard(double secs)
 	}
 }
 
+void GameParaPara::UpdateCalibration(double secs)
+{
+	int tempArenaX;
+	GameObject* tempObj;
+	uint8_t currInput;
+
+	if (!Calibration.started)
+	{
+		for (tempArenaX = 0; tempArenaX < 5; tempArenaX++)
+		{
+			bwArrows[tempArenaX] = (GOStationaryArrow*)objManager->CreateObject(
+				OBJ_DEFAULT_ARROWS_BW, &tempArenaX);
+			tempObj = objManager->CreateObject(OBJ_PINK_FLASH, &tempArenaX);
+			bwArrows[tempArenaX]->SetAttachedFlash((GOPinkFlash*)tempObj);
+		}
+		Calibration.started = 1;
+	}
+	else
+	{
+		currInput = input->GetCurrentInput(useRPI);
+		for (tempArenaX = 0; tempArenaX < 5; tempArenaX++) // loop through each column
+		{
+			if (currInput & (1 << tempArenaX))
+			{
+				// we flash the corresponding arrow
+				bwArrows[tempArenaX]->Flash();
+			}
+		}
+	}
+}
+
 void GameParaPara::UpdateArena(double secs)
 {
 	int tempArenaX, tempArenaY;
 	double timeDiff;
-	BL_GameObject* tempObj;
+	GameObject* tempObj;
 	GODefaultArrow* tempArrow;
 	GODefaultArrowData tempArrowData = { 0 };
 	ArrowListNode* curNode;
@@ -503,7 +618,7 @@ void GameParaPara::UpdateArena(double secs)
 		tempRect.y = 90;
 		tempRect.w = 384;
 		tempRect.h = 2;
-		BL_GameObject** nearObjs = (BL_GameObject**)objManager->FindObjectsOfType(
+		GameObject** nearObjs = (GameObject**)objManager->FindObjectsOfType(
 			OBJ_DEFAULT_ARROWS, &tempRect);
 
 		for (tempArenaX = 0; tempArenaX < 5; tempArenaX++) // loop through each column

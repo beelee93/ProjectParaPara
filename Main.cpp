@@ -4,10 +4,10 @@
 #undef main
 
 // Global sprite list
-static BL_SpriteList* sprites;
+static SpriteList* sprites;
 
 // main game
-static BL_Game* game = NULL;
+static Game* game = NULL;
 
 int main(int argc, char** argv)
 {
@@ -17,11 +17,11 @@ int main(int argc, char** argv)
     if(game->GetInitialised())
     {
         // Create sprite list
-        sprites = new BL_SpriteList(game->GetMainRenderer(), "sprite_definitions.dat");
+        sprites = new SpriteList(game->GetMainRenderer(), "sprite_definitions.dat");
         SDL_SetTextureBlendMode(sprites->GetSprite(OBJ_SHOCKWAVE)->GetTexture(),
                                 SDL_BLENDMODE_ADD);
         if(!sprites->GetInitialised())
-            BL_EHLog("main(): Cannot load sprite definitions.\n");
+            EHLog("main(): Cannot load sprite definitions.\n");
         else
         {
             game->MainLoop();
@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
 ////////////////////////////////////////////////////////////////
 // Get global sprite list
-BL_SpriteList* GetSpriteList()
+SpriteList* GetSpriteList()
 {
     return sprites;
 }

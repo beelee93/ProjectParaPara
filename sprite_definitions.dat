@@ -3,7 +3,7 @@
 # Format should be easy to follow
 #
 
-COUNT 9
+COUNT 10
 
 # 0 - Default arrows
 SPRITE res/default_arrows.png 5
@@ -58,3 +58,7 @@ RECT 0 0 96 32
 # 8 - Heathbar back
 SPRITE res/healthbar.png 1
 RECT 0 0 760 30
+
+#9 - Fontsheet
+SPRITE res/fontsheet.png 1
+RECT 0 0 400 608

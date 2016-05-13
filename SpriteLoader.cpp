@@ -45,7 +45,7 @@ static void strtrim(char* str)
 // creates a list of sprites to be used in game
 // based on a sprite definition file
 // be sure to free definitions
-BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
+SpriteList::SpriteList(SDL_Renderer* renderer, const char* filename)
 {
     int count = 0;
     int lineNumber = 1;
@@ -54,8 +54,8 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
     int tempInt[4];
     int i;
 
-    BL_Sprite** tmpList = NULL;
-    BL_Sprite* tempSpr = NULL;
+    Sprite** tmpList = NULL;
+    Sprite* tempSpr = NULL;
     int listIndex = -1;
     int rectIndex = 0;
     char* token = NULL;
@@ -64,7 +64,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
     FILE* file = fopen(filename, "r");
     if(!file)
     {
-        BL_EHLog("SpriteLoadDefinitions(): Can't locate definitions file.\n");
+        EHLog("SpriteLoadDefinitions(): Can't locate definitions file.\n");
         goto err;
     }
 
@@ -90,7 +90,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                 "Sprite Definition Error: L%d Expected an int after COUNT.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
                     else
@@ -98,14 +98,14 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                         if(count==0)
                         {
                             count = atoi(token);
-                            tmpList = (BL_Sprite**)calloc(count,sizeof(BL_Sprite*));
+                            tmpList = (Sprite**)calloc(count,sizeof(Sprite*));
 
                         }
                         else
                         {
                             sprintf(line,
                                 "Sprite Definition Error: L%d Only one COUNT command is allowed.\n", lineNumber);
-                            BL_EHLog(line);
+                            EHLog(line);
                             goto err;
                         }
                     }
@@ -117,7 +117,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                 "Sprite Definition Error: L%d Need to have a COUNT as the first command.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
@@ -126,7 +126,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                 "Sprite Definition Error: L%d Expected filename after SPRITE.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
@@ -138,7 +138,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                 "Sprite Definition Error: L%d Expected an int after filename.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
@@ -151,17 +151,17 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                "Sprite Definition Error: L%d Defined more sprites than COUNT.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
                     rectIndex = 0;
-                    tempSpr = new BL_Sprite(renderer, tempStr, tempInt[0]);
+                    tempSpr = new Sprite(renderer, tempStr, tempInt[0]);
                     if(!tempSpr->GetInitialised())
                     {
                         sprintf(line,
                                 "Sprite Definition Error: L%d Can't create sprite.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
@@ -174,7 +174,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                     {
                         sprintf(line,
                                "Sprite Definition Error: L%d Setting more RECTs than declared.\n", lineNumber);
-                        BL_EHLog(line);
+                        EHLog(line);
                         goto err;
                     }
 
@@ -185,7 +185,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                         {
                             sprintf(line,
                                     "Sprite Definition Error: L%d Not enough arguments for RECT.\n", lineNumber);
-                            BL_EHLog(line);
+                            EHLog(line);
                             goto err;
                         }
                         tempInt[i] = atoi(token);
@@ -195,7 +195,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
                 default:
                     sprintf(line,
                             "Sprite Definition Error: L%d Unknown command. Skipping...\n", lineNumber);
-                    BL_EHLog(line);
+                    EHLog(line);
                     break;
                 } // switch(..)
             }
@@ -224,7 +224,7 @@ BL_SpriteList::BL_SpriteList(SDL_Renderer* renderer, const char* filename)
         initialised = 0;
 }
 
-BL_SpriteList::~BL_SpriteList()
+SpriteList::~SpriteList()
 {
     int i;
     for(i=0;i<count;i++)
@@ -236,17 +236,17 @@ BL_SpriteList::~BL_SpriteList()
     list = NULL;
 }
 
-int BL_SpriteList::GetCount()
+int SpriteList::GetCount()
 {
     return count;
 }
 
-BL_Sprite* BL_SpriteList::GetSprite(int index)
+Sprite* SpriteList::GetSprite(int index)
 {
     return list[index];
 }
 
-int BL_SpriteList::GetInitialised()
+int SpriteList::GetInitialised()
 {
     return initialised;
 }

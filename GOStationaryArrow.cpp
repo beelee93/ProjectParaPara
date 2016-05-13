@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-GOStationaryArrow::GOStationaryArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS_BW) {}
+GOStationaryArrow::GOStationaryArrow() : GameObject(OBJ_DEFAULT_ARROWS_BW) {}
 
 void GOStationaryArrow::OnInit(int id, int type, void* data)
 {

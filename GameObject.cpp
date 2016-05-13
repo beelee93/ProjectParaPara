@@ -6,7 +6,7 @@
 
 
 static int tempImgIndex;
-static BL_Sprite* tempSpr;
+static Sprite* tempSpr;
 static SDL_Point tempPoint;
 
 static double WrapDouble(double v, double max)
@@ -25,14 +25,14 @@ static double WrapDouble(double v, double max)
     }
 }
 
-BL_GameObject::BL_GameObject(int type)
+GameObject::GameObject(int type)
 {
     OnInit(0, type);
 }
 
-BL_GameObject::~BL_GameObject() { }
+GameObject::~GameObject() { }
 
-void BL_GameObject::OnInit(int id, int type, void* data)
+void GameObject::OnInit(int id, int type, void* data)
 {
     this->type = type;
     this->id = id;
@@ -52,7 +52,7 @@ void BL_GameObject::OnInit(int id, int type, void* data)
     depth = 0;
 }
 
-void BL_GameObject::OnRender(double secs, SDL_Renderer* renderer)
+void GameObject::OnRender(double secs, SDL_Renderer* renderer)
 {
     if(!visible || destroyFlag) return;
 
@@ -75,7 +75,7 @@ void BL_GameObject::OnRender(double secs, SDL_Renderer* renderer)
                 imageAngle, &tempPoint, SDL_FLIP_NONE);
     }
 }
-void BL_GameObject::OnUpdate(double secs)
+void GameObject::OnUpdate(double secs)
 {
     if(!enabled || destroyFlag) return;
 
@@ -92,22 +92,22 @@ void BL_GameObject::OnUpdate(double secs)
     }
 }
 
-void BL_GameObject::SignalDestroy()
+void GameObject::SignalDestroy()
 {
     destroyFlag = 1;
 }
 
-int BL_GameObject::IsBeingDestroyed()
+int GameObject::IsBeingDestroyed()
 {
     return destroyFlag;
 }
 
-void* BL_GameObject::GetAttachedGOM()
+void* GameObject::GetAttachedGOM()
 {
     return attachedGOM;
 }
 
-void BL_GameObject::SetAttachedGOM(void* gom)
+void GameObject::SetAttachedGOM(void* gom)
 {
     attachedGOM = gom;
 }

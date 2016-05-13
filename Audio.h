@@ -18,16 +18,19 @@ typedef struct {
 	Mix_Music* music;
 } MusicInformation;
 
-class BL_Audio
+class Audio
 {
 public:
-	BL_Audio();
-	~BL_Audio();
+	Audio();
+	~Audio();
 
 	int AddMusic(const char* filename, const char* name, double length, const char* arrowDef);
 	int AddSound(const char* filename);
 
 	void PlayMusic(int index);
+	void PauseMusic();
+	void RestartMusic();
+
 	void StopMusic();
 	void PlaySound(int index);
 
@@ -40,7 +43,7 @@ public:
 
 	MusicInformation* GetCurrentMusic();
 	MusicInformation* GetMusicInformation(int index);
-	static int LoadMusicList(const char* filename, BL_Audio* audio);
+	static int LoadMusicList(const char* filename, Audio* audio);
 
 protected:
 	Mix_Chunk** chunks;

@@ -18,20 +18,20 @@
 
 #define CAPACITY_INC 20         /* rate of expansion of GOM capacity */
 
-class BL_GOM
+class GOM
 {
 public:
-    BL_GOM();
-    virtual ~BL_GOM();
+    GOM();
+    virtual ~GOM();
 
     // Creates an object of specified type with its default
     // settings, and returns a pointer to it
     // can pass a data to it
-    BL_GameObject* CreateObject(int type, void* data = NULL);
+    GameObject* CreateObject(int type, void* data = NULL);
 
     // Finds and returns an array of object references of the said type
     // Up to 25 max for the implementation
-    BL_GameObject** FindObjectsOfType(int type, SDL_Rect* searchArea = NULL);
+    GameObject** FindObjectsOfType(int type, SDL_Rect* searchArea = NULL);
 
     // Destroys and frees an object based on its id
     void DestroyObjectById(int id);
@@ -53,15 +53,15 @@ public:
 
     // Override this to provide conversion between
     // integer type constant to the appropriate
-    // BL_GameObject descendents
-    virtual BL_GameObject* OnCreateObject(int type);
+    // GameObject descendents
+    virtual GameObject* OnCreateObject(int type);
 
 protected:
     int capacity;               // capacity of the internal array
     int objCount;               // a count of number of instantiated objects
-    BL_GameObject** objects;     // list of pointers to objects
-    BL_GameObject* tempArray[26];  // for use by FindObjects
-    BL_RenderQueue* renderQueue;
+    GameObject** objects;     // list of pointers to objects
+    GameObject* tempArray[26];  // for use by FindObjects
+    RenderQueue* renderQueue;
     SDL_Renderer* mainRenderer;
     void ExpandCapacity();
 

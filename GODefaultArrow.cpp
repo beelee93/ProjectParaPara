@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-GODefaultArrow::GODefaultArrow() : BL_GameObject(OBJ_DEFAULT_ARROWS) { }
+GODefaultArrow::GODefaultArrow() : GameObject(OBJ_DEFAULT_ARROWS) { }
 
 void GODefaultArrow::OnInit(int id, int type, void* data)
 {
@@ -37,7 +37,7 @@ void GODefaultArrow::OnInit(int id, int type, void* data)
 
 void GODefaultArrow::OnUpdate(double secs)
 {
-    BL_GameObject::OnUpdate(secs);
+    GameObject::OnUpdate(secs);
 
 	if (IsChained())
 	{
@@ -135,7 +135,7 @@ void GODefaultArrow::OnRender(double secs, SDL_Renderer* renderer)
 	if (IsChained())
 	{
 		// draw chain
-		static BL_Sprite* sprBack = GetSpriteList()->GetSprite(SPR_CHAINED_BACK);
+		static Sprite* sprBack = GetSpriteList()->GetSprite(SPR_CHAINED_BACK);
 
 		// calculate end of chain y-ordinate
 		tex = sprBack->GetTexture();

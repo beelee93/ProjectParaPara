@@ -5,7 +5,7 @@
 
 #include "RenderQueue.h"
 
-BL_RenderQueue::BL_RenderQueue()
+RenderQueue::RenderQueue()
 {
     queueHeads[ACTIVE] = NULL;
     queueHeads[INACTIVE] = NULL;
@@ -23,7 +23,7 @@ BL_RenderQueue::BL_RenderQueue()
     }
 }
 
-QueueNode* BL_RenderQueue::CreateNode()
+QueueNode* RenderQueue::CreateNode()
 {
     QueueNode* node = (QueueNode*)malloc(sizeof(QueueNode));
     node->next = NULL;
@@ -31,7 +31,7 @@ QueueNode* BL_RenderQueue::CreateNode()
 	return node;
 }
 
-void BL_RenderQueue::QueueObject(BL_GameObject* obj)
+void RenderQueue::QueueObject(GameObject* obj)
 {
     if(!obj) return; // do not accept NULL objects
 
@@ -93,7 +93,7 @@ void BL_RenderQueue::QueueObject(BL_GameObject* obj)
     }
 }
 
-void BL_RenderQueue::Render(double secs, SDL_Renderer* renderer)
+void RenderQueue::Render(double secs, SDL_Renderer* renderer)
 {
     if(!queueHeads[ACTIVE]) return; // nothing to render
     QueueNode* node = queueHeads[ACTIVE];
@@ -117,7 +117,7 @@ void BL_RenderQueue::Render(double secs, SDL_Renderer* renderer)
     activeQueueTail = NULL;
 }
 
-void BL_RenderQueue::Purge()
+void RenderQueue::Purge()
 {
     QueueNode* node = queueHeads[INACTIVE];
     QueueNode* temp;
@@ -139,7 +139,7 @@ void BL_RenderQueue::Purge()
     queueHeads[INACTIVE] = queueHeads[ACTIVE] = NULL;
 }
 
-BL_RenderQueue::~BL_RenderQueue()
+RenderQueue::~RenderQueue()
 {
     Purge();
 }

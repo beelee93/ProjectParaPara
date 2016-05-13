@@ -11,7 +11,7 @@ static int m_ehInit = 0;
 static FILE* m_logFile = NULL;
 
 // Initialises the error logger
-void BL_EHInit()
+void EHInit()
 {
     m_logFile = fopen(EH_FILENAME, "w");
 
@@ -22,20 +22,20 @@ void BL_EHInit()
 }
 
 // logs the message
-void BL_EHLog(const char* str)
+void EHLog(const char* str)
 {
     fprintf(m_logFile, str);
 }
 
 // flushes to output
-void BL_EHFlush()
+void EHFlush()
 {
     if(m_ehInit)
         fflush(m_logFile);
 }
 
 // Clean up
-void BL_EHQuit()
+void EHQuit()
 {
     if(m_ehInit) fclose(m_logFile);
     m_ehInit = 0;

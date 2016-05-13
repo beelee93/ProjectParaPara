@@ -21,6 +21,7 @@
 #define OBJ_TITLE				6
 #define SPR_SORT_OF				7
 #define SPR_HEALTHBAR			8
+#define OBJ_FONTSHEET			9
 
 #define OBJ_SCORE				9001
 #define OBJ_PINK_FLASH          9000
@@ -42,14 +43,14 @@
 
 
 /////// Global Functions ////////
-BL_SpriteList* GetSpriteList();
+SpriteList* GetSpriteList();
 
 /////// Inherited GOM ////////
-class GOMParaPara : public BL_GOM
+class GOMParaPara : public GOM
 {
 public:
     GOMParaPara();
-    BL_GameObject* OnCreateObject(int type);
+    GameObject* OnCreateObject(int type);
 };
 
 /////// Objects Classes ////////
@@ -65,7 +66,7 @@ typedef struct {
 	float chainDelay;
 } GODefaultArrowData;
 
-class GODefaultArrow : public BL_GameObject
+class GODefaultArrow : public GameObject
 {
 public:
     GODefaultArrow();
@@ -100,7 +101,7 @@ private:
 
 };
 
-class GOPinkFlash : public BL_GameObject
+class GOPinkFlash : public GameObject
 {
 public:
     GOPinkFlash();
@@ -112,7 +113,7 @@ private:
     SDL_Rect drawRect;
 };
 
-class GOStationaryArrow : public BL_GameObject
+class GOStationaryArrow : public GameObject
 {
 public:
     GOStationaryArrow();
@@ -126,7 +127,7 @@ private:
     GOPinkFlash* flasher;
 };
 
-class GOShockwave : public BL_GameObject
+class GOShockwave : public GameObject
 {
 public:
     GOShockwave();
@@ -139,7 +140,7 @@ private:
 	float scaler;
 };
 
-class GOTitle : public BL_GameObject
+class GOTitle : public GameObject
 {
 public:
 	GOTitle();
@@ -150,10 +151,10 @@ public:
 private:
 	double timer;
 	double backAlpha;
-	BL_Sprite* sortOfSprite;
+	Sprite* sortOfSprite;
 };
 
-class GOScore : public BL_GameObject
+class GOScore : public GameObject
 {
 public:
 	GOScore();
@@ -165,7 +166,7 @@ private:
 
 };
 
-class GOHeader : public BL_GameObject
+class GOHeader : public GameObject
 {
 public:
 	GOHeader();
@@ -174,7 +175,25 @@ public:
 
 private: 
 	int* health;
-	BL_Sprite* barSprite;
+	Sprite* barSprite;
 	SDL_Rect drawRect;
+};
+
+class GOFontSheet : public GameObject
+{
+public: 
+	GOFontSheet();
+	void OnInit(int id, int type, void* data = NULL);
+	void OnRender(double secs, SDL_Renderer* renderer);
+	void SetString(const char* str);
+	void SetCentered(int centered);
+
+private:
+	char text[256];
+	int offX;
+	int offY;
+	int centered;
+	void MeasureString();
+
 };
 #endif // RESOURCE_H_INCLUDED

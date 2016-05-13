@@ -18,25 +18,25 @@
 
 /*
 typedef struct  {
-    BL_Sprite* list;
+    Sprite* list;
     int count;
-} BL_SpriteList;
+} SpriteList;
 
-int BL_SpriteLoadDefinitions(SDL_Renderer* renderer, const char* filename, BL_SpriteList* sprList);
-void BL_SpriteFreeDefinitions(BL_SpriteList* sprList);
+int SpriteLoadDefinitions(SDL_Renderer* renderer, const char* filename, SpriteList* sprList);
+void SpriteFreeDefinitions(SpriteList* sprList);
 */
 
-class BL_SpriteList
+class SpriteList
 {
 public:
-    BL_SpriteList(SDL_Renderer* renderer, const char* filename);
-    ~BL_SpriteList();
+    SpriteList(SDL_Renderer* renderer, const char* filename);
+    ~SpriteList();
     int GetCount();
     int GetInitialised();
-    BL_Sprite* GetSprite(int index);
+    Sprite* GetSprite(int index);
 
 private:
-    BL_Sprite** list;
+    Sprite** list;
     int count;
     int initialised;
 };

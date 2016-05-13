@@ -1,6 +1,6 @@
 GAME_OBJS = GODefaultArrow.o GOHeader.o GOPinkFlash.o \
 	GOScore.o GOShockwave.o GOStationaryArrow.o \
-	GOTitle.o
+	GOTitle.o GOFontSheet.o
 
 OBJS = ErrorHandler.o Game.o GameObject.o \
 	   GameObjectManager.o Sprite.o SpriteLoader.o \
@@ -20,7 +20,6 @@ else
 	CFLAGS = -c
 endif
 
-CFLAGS = -c
 CC = g++
 
 install : $(OBJS)
@@ -68,6 +67,9 @@ GODefaultArrow.o : $(GOH) GODefaultArrow.cpp
 
 GOShockwave.o : $(GOH) GOShockwave.cpp
 	$(CC) $(CFLAGS) $(LIBS) GOShockwave.cpp
+
+GOFontSheet.o : $(GOH) GOFontSheet.cpp
+	$(CC) $(CFLAGS) $(LIBS) GOFontSheet.cpp
 
 GOStationaryArrow.o : $(GOH) GOStationaryArrow.cpp
 	$(CC) $(CFLAGS) $(LIBS) GOStationaryArrow.cpp

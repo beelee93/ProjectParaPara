@@ -14,14 +14,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-class BL_Sprite
+class Sprite
 {
 public:
     // Creates and sets the sprite
-    BL_Sprite(SDL_Renderer* renderer, const char* filename, int elementCount);
+    Sprite(SDL_Renderer* renderer, const char* filename, int elementCount);
 
     // dtor
-    ~BL_Sprite();
+    ~Sprite();
 
     // Renders the sprite using the specified renderer and properties
     void Render(int elemIndex,int dx, int dy, int dw, int dh,

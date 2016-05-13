@@ -56,7 +56,7 @@ void InputParaPara::Update()
 	int temp;
 	for (int i = 0; i < 5; i++)
 	{
-		temp = digitalRead(i) ? 1 : 0;
+		temp = digitalRead(i) ? 0 : 1;
 		temp = temp << (8 + i);
 		this->currInput |= temp;
 	}

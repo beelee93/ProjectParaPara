@@ -23,24 +23,24 @@
 #include <SDL2/SDL_ttf.h>
 
 ////////// Constants //////////
-#define BL_IF_SDL       1
-#define BL_IF_IMG       2
-#define BL_IF_TTF       4
+#define IF_SDL       1
+#define IF_IMG       2
+#define IF_TTF       4
 
 #define WINDOW_TITLE    "Para Para"
 #define FPS_CAP         60
 
-enum BL_SET_FULLSCREEN {
+enum SET_FULLSCREEN {
     SF_WINDOWED_MODE,
     SF_FULLSCREEN_MODE,
     SF_TOGGLE
 };
 
-class BL_Game
+class Game
 {
 public:
-    BL_Game(int argc, char** argv);
-    virtual ~BL_Game();
+    Game(int argc, char** argv);
+    virtual ~Game();
 
     void MainLoop();
 
@@ -49,20 +49,20 @@ public:
     virtual void OnEvent(SDL_Event* event, double secs);
 
     void SignalExit();
-    void SetFullscreen(BL_SET_FULLSCREEN fscr);
+    void SetFullscreen(SET_FULLSCREEN fscr);
     SDL_Renderer* GetMainRenderer();
     SDL_Window* GetMainWindow();
-    BL_GOM* GetObjectManager();
+    GOM* GetObjectManager();
     int GetInitialised();
-    void SetObjectManager(BL_GOM* gom);
+    void SetObjectManager(GOM* gom);
 
-	BL_Audio* GetAudio();
+	Audio* GetAudio();
 
 protected:
     SDL_Renderer* mainRenderer;
     SDL_Window* mainWindow;
-    BL_GOM* objManager;
-	BL_Audio* audio;
+    GOM* objManager;
+	Audio* audio;
 
     int initialised;
     int isFullscreen;

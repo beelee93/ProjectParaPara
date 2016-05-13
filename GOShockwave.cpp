@@ -5,7 +5,7 @@
 
 #include "Globals.h"
 
-GOShockwave::GOShockwave() : BL_GameObject(OBJ_SHOCKWAVE) { }
+GOShockwave::GOShockwave() : GameObject(OBJ_SHOCKWAVE) { }
 
 // create this object at a position which will be the centre of the shockwave
 void GOShockwave::OnInit(int id, int type, void* data)

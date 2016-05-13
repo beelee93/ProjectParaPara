@@ -11,7 +11,7 @@
 
 typedef struct __queuenode
 {
-    BL_GameObject* item;
+    GameObject* item;
     struct __queuenode* next;
 } QueueNode;
 
@@ -21,11 +21,11 @@ typedef struct __queuenode
 // recycled, to reduce memallocs.
 #define ACTIVE 0
 #define INACTIVE 1
-class BL_RenderQueue
+class RenderQueue
 {
 public:
-    BL_RenderQueue();
-    ~BL_RenderQueue();
+    RenderQueue();
+    ~RenderQueue();
 
     // removes all alloc-ed nodes from memory
     void Purge();
@@ -34,7 +34,7 @@ public:
     void Render(double secs, SDL_Renderer* renderer);
 
     // Queues an object for rendering based on its depth
-    void QueueObject(BL_GameObject* obj);
+    void QueueObject(GameObject* obj);
 
 protected:
     void Enqueue(QueueNode** head);
