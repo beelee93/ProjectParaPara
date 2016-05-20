@@ -20,7 +20,7 @@ static double timer = 0;
 static GOStationaryArrow* bwArrows[5];
 
 static int health = 100;
-static int useRPI = 0;
+static int useRPI = 1;
 
 static GameParaPara* theGame = NULL;
 
@@ -240,7 +240,7 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
                     break;
 				case SDLK_F10: // toggle rpi gpio pins usage
 #ifdef RPI
-					useRPI = ~useRPI;
+					useRPI = useRPI? 0:1;
 #endif
 					break;
 
@@ -284,6 +284,7 @@ void GameParaPara::OnExitState(GameState leavingState)
 // current state
 void GameParaPara::OnEnterState(GameState newState)
 {
+	char msg1[20]="Select Song";
 	GameObject* temp1;
     switch(newState)
     {
@@ -305,7 +306,7 @@ void GameParaPara::OnEnterState(GameState newState)
 
 	case GS_SongSelection:
 		SongSelection.currentSelection = 0;
-		temp1 = objManager->CreateObject(OBJ_FONTSHEET, "Select Song");
+		temp1 = objManager->CreateObject(OBJ_FONTSHEET, msg1);
 		((GOFontSheet*)temp1)->SetCentered(1);
 		temp1->x = 400;
 		temp1->y = 10;
@@ -734,7 +735,7 @@ void ArrowFailureHandler(GODefaultArrow* target)
 	if (health < 0) {
 		health = 0;
 
-		theGame->isVictory = 0;
-		theGame->FadeToGameState(GS_Scoreboard);
+//		theGame->isVictory = 0;
+//		theGame->FadeToGameState(GS_Scoreboard);
 	}
 }

@@ -20,7 +20,7 @@ else
 	CFLAGS = -c
 endif
 
-CC = g++
+CC = g++ -std=c++11
 
 install : $(OBJS)
 	$(CC) $(OBJS) $(DIRS) $(LIBS) -o para
