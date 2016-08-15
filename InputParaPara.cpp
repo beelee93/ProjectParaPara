@@ -10,8 +10,7 @@ InputParaPara::InputParaPara()
 	this->currInput = this->prevInput = 0;
 #ifdef RPI
 	wiringPiSetup();
-	for(int i=0;i<5;i++)
-		pinMode(i, INPUT);
+	wiringPiSPISetup(0, SPI_SPEED);
 #endif
 }
 
@@ -47,6 +46,8 @@ void InputParaPara::Reset()
 	currInput = prevInput = 0;
 }
 
+static unsigned char spidata[3] = { 0, 0, 0 };
+
 void InputParaPara::Update()
 {
 	this->prevInput = this->currInput;
@@ -54,9 +55,24 @@ void InputParaPara::Update()
 	this->currInput = 0;
 #ifdef RPI
 	int temp;
+	int sensor;
+
+	// read CH0 to CH4
 	for (int i = 0; i < 5; i++)
 	{
-		temp = digitalRead(i) ? 1 : 0;
+		// set the data to be sent to the sensor
+		spidata[0] = 0x1;
+		spidata[1] = (8 + i) << 4;
+		spidata[2] = 0;
+
+		// simultaneous write/read
+		wiringPiSPIDataRW(0, spidata, 3);
+
+		// parse data (take 10 bits)
+		sensor = (spidata[1] & 0x7)<<8 + spidata[2];
+
+		// the larger the sensor value, the closer the obstacle
+		temp = (sensor > SENSOR_THRESHOLD ? 1 : 0);
 		temp = temp << (8 + i);
 		this->currInput |= temp;
 	}

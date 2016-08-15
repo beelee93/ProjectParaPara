@@ -241,6 +241,7 @@ void GameParaPara::OnEvent(SDL_Event* event, double secs)
 				case SDLK_F10: // toggle rpi gpio pins usage
 #ifdef RPI
 					useRPI = useRPI? 0:1;
+					printf("UseRPI=%d\n", useRPI);
 #endif
 					break;
 

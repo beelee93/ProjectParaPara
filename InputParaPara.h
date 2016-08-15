@@ -4,12 +4,16 @@
 // from keyboard/GPIO pins
 //////////////////////////////////////////
 
+#define SENSOR_THRESHOLD	200
+#define SPI_SPEED			500000
+
 // define RPI to compile include wiringPi codes
 #ifndef _INPUTPARAPARA_H
 #define _INPUTPARAPARA_H
 
 #ifdef RPI
 #include <wiringPi.h>
+#include <wiringPiSPI.h>
 #endif
 
 #include <SDL2/SDL.h>
