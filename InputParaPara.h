@@ -4,7 +4,7 @@
 // from keyboard/GPIO pins
 //////////////////////////////////////////
 
-#define SENSOR_THRESHOLD	200
+#define SENSOR_THRESHOLD	100
 #define SPI_SPEED			500000
 
 // define RPI to compile include wiringPi codes
