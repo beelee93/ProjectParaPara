@@ -18,6 +18,7 @@
 
 #include <SDL2/SDL.h>
 
+// wrapper for Keyboard/GPIO inputs
 class InputParaPara {
 public:
 	InputParaPara();

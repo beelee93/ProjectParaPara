@@ -97,7 +97,9 @@ void InputParaPara::Update()
 		temp = temp << (8 + i);
 		this->currInput |= temp;
 	}
-#else
+#endif
+
+	// get keyboard state
 	const uint8_t* keys = SDL_GetKeyboardState(NULL);
 	this->currInput |= (
 		keys[SDL_SCANCODE_Y] |
@@ -105,5 +107,4 @@ void InputParaPara::Update()
 		keys[SDL_SCANCODE_I] << 2 |
 		keys[SDL_SCANCODE_O] << 3 |
 		keys[SDL_SCANCODE_P] << 4);
-#endif
 }
