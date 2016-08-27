@@ -18,6 +18,25 @@ in arcades using Raspberry Pi.
 
 ---
 
+#Compilation
+
+First, ensure that the required libraries are installed.
+
+To compile and run the game without interfacing with the 
+RPi GPIO pins:
+```
+make
+./para
+```
+
+To compile and run the game with the RPi GPIO pins
+```
+make rpi=1
+sudo ./para
+```
+
+---
+
 #Source code summary
 
 ###Main.cpp
